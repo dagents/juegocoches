@@ -24,11 +24,6 @@ async function getTodayIdeas(): Promise<IdeaWithUser[]> {
   const todayDate = getMadridDateToday();
   const ideas = await prisma.idea.findMany({
     where: { dayDate: todayDate },
-    include: {
-      user: {
-        select: { displayName: true, avatarUrl: true },
-      },
-    },
     orderBy: [{ votesCount: "desc" }, { createdAt: "asc" }],
   });
   return ideas as IdeaWithUser[];
@@ -37,13 +32,7 @@ async function getTodayIdeas(): Promise<IdeaWithUser[]> {
 async function getRecentWinners(): Promise<DailyWinnerWithIdea[]> {
   const winners = await prisma.dailyWinner.findMany({
     include: {
-      idea: {
-        include: {
-          user: {
-            select: { displayName: true },
-          },
-        },
-      },
+      idea: true,
     },
     orderBy: { dayDate: "desc" },
     take: 10,
@@ -64,13 +53,7 @@ async function hasUserVotedToday(userId: string): Promise<boolean> {
 async function getWinningGame(): Promise<WinningGameWithProposal | null> {
   const winner = await prisma.winningGame.findFirst({
     include: {
-      proposal: {
-        include: {
-          user: {
-            select: { displayName: true },
-          },
-        },
-      },
+      proposal: true,
     },
   });
   return winner as WinningGameWithProposal | null;
@@ -80,11 +63,6 @@ async function getTodayGameProposals(): Promise<GameProposalWithUser[]> {
   const todayDate = getMadridDateToday();
   const proposals = await prisma.gameProposal.findMany({
     where: { proposalDate: todayDate },
-    include: {
-      user: {
-        select: { displayName: true, avatarUrl: true },
-      },
-    },
     orderBy: [{ votesCount: "desc" }, { createdAt: "asc" }],
   });
   return proposals as GameProposalWithUser[];
@@ -169,7 +147,7 @@ export default async function HomePage() {
             {winningGame.proposal.description}
           </p>
           <p className="text-xs text-gray-500 mt-2">
-            Propuesto por {winningGame.proposal.user.displayName ?? "Anónimo"} · {winningGame.proposal.votesCount} votos
+            #{winningGame.proposal.userId.slice(0, 8)} · {winningGame.proposal.votesCount} votos
           </p>
         </div>
         <p className="text-gray-400 max-w-md mx-auto">

@@ -38,8 +38,7 @@ export default async function Header() {
               )}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-400 hidden sm:inline">
-                  {user.user_metadata?.display_name ||
-                    user.email?.split("@")[0]}
+                  #{user.id.slice(0, 8)}
                 </span>
                 <form action={signOut}>
                   <button

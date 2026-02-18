@@ -28,7 +28,7 @@ export default function Changelog({ winners }: ChangelogProps) {
               <p className="text-sm text-gray-300">{winner.idea.content}</p>
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="text-xs text-gray-500">
-                  {winner.idea.user.displayName ?? "Anónimo"}
+                  #{winner.idea.userId.slice(0, 8)}
                 </span>
                 {winner.idea.category && (
                   <Badge variant="info">{winner.idea.category}</Badge>

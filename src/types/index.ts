@@ -14,10 +14,6 @@ export type IdeaWithUser = {
   votesCount: number;
   dayDate: Date;
   createdAt: Date;
-  user: {
-    displayName: string | null;
-    avatarUrl: string | null;
-  };
 };
 
 export type DailyWinnerWithIdea = {
@@ -27,12 +23,10 @@ export type DailyWinnerWithIdea = {
   createdAt: Date;
   idea: {
     id: string;
+    userId: string;
     content: string;
     category: string | null;
     votesCount: number;
-    user: {
-      displayName: string | null;
-    };
   };
 };
 
@@ -47,10 +41,6 @@ export type GameProposalWithUser = {
   votesCount: number;
   proposalDate: Date;
   createdAt: Date;
-  user: {
-    displayName: string | null;
-    avatarUrl: string | null;
-  };
 };
 
 export type WinningGameWithProposal = {
@@ -58,11 +48,9 @@ export type WinningGameWithProposal = {
   createdAt: Date;
   proposal: {
     id: string;
+    userId: string;
     title: string;
     description: string;
     votesCount: number;
-    user: {
-      displayName: string | null;
-    };
   };
 };
