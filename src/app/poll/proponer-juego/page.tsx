@@ -1,18 +1,22 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { getMadridDateToday } from "@/lib/dates";
+import { getMadridDateToday, isGameVotingOpen } from "@/lib/dates";
 import Card from "@/components/ui/Card";
-import IdeaSubmitForm from "@/components/ideas/IdeaSubmitForm";
+import GameProposalSubmitForm from "@/components/game-proposals/GameProposalSubmitForm";
 import Link from "next/link";
 
-export default async function ProponerPage() {
+export default async function ProponerJuegoPage() {
   const user = await getAuthUser();
   if (!user) redirect("/login");
 
+  // If winning game already selected or voting closed, redirect to home
+  const winningGame = await prisma.winningGame.findFirst();
+  if (winningGame || !isGameVotingOpen()) redirect("/poll");
+
   const todayDate = getMadridDateToday();
-  const existingIdea = await prisma.idea.findFirst({
-    where: { userId: user.id, dayDate: todayDate },
+  const existingProposal = await prisma.gameProposal.findFirst({
+    where: { userId: user.id, proposalDate: todayDate },
   });
 
   return (
@@ -21,34 +25,37 @@ export default async function ProponerPage() {
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold gradient-text">
-              Proponer Idea
+              Proponer Juego
             </h1>
             <p className="text-sm text-gray-400 mt-1">
-              Propón una mejora concreta para el juego. Un moderador IA
-              evaluará tu idea al instante.
+              Propón un juego o actividad para que la comunidad vote. Un
+              moderador IA evaluará tu propuesta al instante.
             </p>
           </div>
 
-          {existingIdea ? (
+          {existingProposal ? (
             <div className="space-y-4">
               <div
                 className={`p-4 rounded-xl border ${
-                  existingIdea.approved
+                  existingProposal.approved
                     ? "bg-green-900/20 border-green-700/50"
-                    : existingIdea.approved === false
+                    : existingProposal.approved === false
                     ? "bg-red-900/20 border-red-700/50"
                     : "bg-yellow-900/20 border-yellow-700/50"
                 }`}
               >
                 <p className="text-sm text-gray-300 mb-2">
-                  Ya has propuesto una idea hoy:
+                  Ya has propuesto un juego hoy:
                 </p>
                 <p className="text-foreground font-medium">
-                  &quot;{existingIdea.content}&quot;
+                  &quot;{existingProposal.title}&quot;
                 </p>
-                {existingIdea.rejectionReason && (
+                <p className="text-sm text-gray-400 mt-1">
+                  {existingProposal.description}
+                </p>
+                {existingProposal.rejectionReason && (
                   <p className="text-xs text-red-400 mt-2">
-                    Rechazada: {existingIdea.rejectionReason}
+                    Rechazada: {existingProposal.rejectionReason}
                   </p>
                 )}
               </div>
@@ -60,7 +67,7 @@ export default async function ProponerPage() {
               </Link>
             </div>
           ) : (
-            <IdeaSubmitForm />
+            <GameProposalSubmitForm />
           )}
         </div>
       </Card>

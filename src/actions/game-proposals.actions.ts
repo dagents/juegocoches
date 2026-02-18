@@ -2,30 +2,30 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
-import { ideaSchema } from "@/lib/validation";
+import { gameProposalSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { moderateIdea } from "@/lib/moderation";
-import { getMadridDateToday, isBeforeMadridNoon } from "@/lib/dates";
+import { moderateGameProposal } from "@/lib/moderation";
+import { getMadridDateToday, isGameVotingOpen } from "@/lib/dates";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/types";
 
-export async function submitIdea(
+export async function submitGameProposal(
   formData: FormData
 ): Promise<ActionResult<{ id: string; approved: boolean | null }>> {
   try {
     // 1. Auth
     const user = await requireAuth();
 
-    // 2. Check proposal window (before noon Madrid)
-    if (!isBeforeMadridNoon()) {
+    // 2. Check voting window
+    if (!isGameVotingOpen()) {
       return {
         success: false,
-        error: "Las propuestas de mejora se aceptan hasta las 12:00. A partir de ahora solo se puede votar.",
+        error: "El plazo para proponer juegos ha terminado.",
       };
     }
 
     // 3. Rate limit
-    const rl = checkRateLimit(user.id, "submitIdea");
+    const rl = checkRateLimit(user.id, "submitGameProposal");
     if (!rl.success) {
       return {
         success: false,
@@ -34,22 +34,25 @@ export async function submitIdea(
     }
 
     // 3. Validate input
-    const parsed = ideaSchema.safeParse({ content: formData.get("content") });
+    const parsed = gameProposalSchema.safeParse({
+      title: formData.get("title"),
+      description: formData.get("description"),
+    });
     if (!parsed.success) {
       return {
         success: false,
         error: parsed.error.issues[0]?.message ?? "Contenido no válido",
       };
     }
-    const { content } = parsed.data;
+    const { title, description } = parsed.data;
 
-    // 4. Check daily limit
+    // 4. Check daily limit (one proposal per user per day)
     const todayDate = getMadridDateToday();
-    const existingIdea = await prisma.idea.findFirst({
-      where: { userId: user.id, dayDate: todayDate },
+    const existingProposal = await prisma.gameProposal.findFirst({
+      where: { userId: user.id, proposalDate: todayDate },
     });
-    if (existingIdea) {
-      return { success: false, error: "Ya has propuesto una mejora hoy." };
+    if (existingProposal) {
+      return { success: false, error: "Ya has propuesto un juego hoy." };
     }
 
     // 5. Daily API limit (3 moderation calls per 24h)
@@ -62,17 +65,18 @@ export async function submitIdea(
     }
 
     // 6. AI Moderation
-    const moderation = await moderateIdea(content);
+    const moderation = await moderateGameProposal(title, description);
 
-    // 7. Create idea
-    const idea = await prisma.idea.create({
+    // 7. Create proposal
+    const proposal = await prisma.gameProposal.create({
       data: {
         userId: user.id,
-        content,
+        title,
+        description,
         approved: moderation.approved,
         rejectionReason: moderation.approved ? null : moderation.reason,
         category: moderation.category,
-        dayDate: todayDate,
+        proposalDate: todayDate,
       },
     });
 
@@ -81,20 +85,19 @@ export async function submitIdea(
 
     return {
       success: true,
-      data: { id: idea.id, approved: idea.approved },
+      data: { id: proposal.id, approved: proposal.approved },
     };
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return { success: false, error: "Debes iniciar sesión." };
     }
-    // Unique constraint violation
     if (
       error instanceof Error &&
       error.message.includes("Unique constraint")
     ) {
-      return { success: false, error: "Ya has propuesto una mejora hoy." };
+      return { success: false, error: "Ya has propuesto un juego hoy." };
     }
-    console.error("submitIdea error:", error);
+    console.error("submitGameProposal error:", error);
     return { success: false, error: "Error interno. Inténtalo de nuevo." };
   }
 }

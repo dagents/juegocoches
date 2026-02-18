@@ -16,8 +16,10 @@ model Profile {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  ideas Idea[]
-  votes Vote[]
+  ideas         Idea[]
+  votes         Vote[]
+  gameProposals GameProposal[]
+  gameVotes     GameVote[]
 
   @@map("profiles")
 }
@@ -68,4 +70,51 @@ model DailyWinner {
   idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
 
   @@map("daily_winners")
+}
+
+model GameProposal {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  title           String    @db.VarChar(100)
+  description     String    @db.VarChar(500)
+  approved        Boolean?
+  rejectionReason String?   @map("rejection_reason") @db.VarChar(500)
+  category        String?   @db.VarChar(50)
+  votesCount      Int       @default(0) @map("votes_count")
+  proposalDate    DateTime  @map("proposal_date") @db.Date
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  user        Profile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameVotes   GameVote[]
+  winningGame WinningGame?
+
+  @@unique([userId, proposalDate], name: "one_game_proposal_per_user_per_day")
+  @@index([proposalDate, approved])
+  @@index([proposalDate, votesCount(sort: Desc)])
+  @@map("game_proposals")
+}
+
+model GameVote {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  proposalId   String   @map("proposal_id") @db.Uuid
+  proposalDate DateTime @map("proposal_date") @db.Date
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user     Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposal GameProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, proposalDate], name: "one_game_vote_per_user_per_day")
+  @@index([proposalId])
+  @@map("game_votes")
+}
+
+model WinningGame {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  proposalId String   @unique @map("proposal_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  proposal GameProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@map("winning_game")
 }

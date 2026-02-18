@@ -18,3 +18,8 @@ export const CATEGORIES = [
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
+
+export const GAME_TITLE_MIN_LENGTH = 3;
+export const GAME_TITLE_MAX_LENGTH = 100;
+export const GAME_DESCRIPTION_MIN_LENGTH = 10;
+export const GAME_DESCRIPTION_MAX_LENGTH = 500;

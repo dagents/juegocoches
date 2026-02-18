@@ -17,8 +17,27 @@ function TimeUnit({ value, label }: { value: number; label: string }) {
   );
 }
 
-export default function MadridCountdown() {
-  const { hours, minutes, seconds, isExpired } = useCountdown();
+interface MadridCountdownProps {
+  target?: "midnight" | "tomorrow-noon";
+}
+
+export default function MadridCountdown({ target = "midnight" }: MadridCountdownProps) {
+  const { hours, minutes, seconds, isExpired, isLoading } = useCountdown(target);
+
+  if (isLoading) {
+    return (
+      <div className="text-center space-y-3">
+        <p className="text-sm text-gray-400">Votación cierra en</p>
+        <div className="flex items-center justify-center gap-2">
+          <TimeUnit value={0} label="horas" />
+          <span className="text-2xl text-gray-500 font-mono pb-5">:</span>
+          <TimeUnit value={0} label="min" />
+          <span className="text-2xl text-gray-500 font-mono pb-5">:</span>
+          <TimeUnit value={0} label="seg" />
+        </div>
+      </div>
+    );
+  }
 
   if (isExpired) {
     return (

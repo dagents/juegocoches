@@ -6,6 +6,10 @@ import {
   PASSWORD_MAX_LENGTH,
   DISPLAY_NAME_MIN_LENGTH,
   DISPLAY_NAME_MAX_LENGTH,
+  GAME_TITLE_MIN_LENGTH,
+  GAME_TITLE_MAX_LENGTH,
+  GAME_DESCRIPTION_MIN_LENGTH,
+  GAME_DESCRIPTION_MAX_LENGTH,
 } from "@/lib/constants";
 import { sanitizeHtml } from "@/lib/security";
 
@@ -42,4 +46,23 @@ export const registerSchema = loginSchema.extend({
     .max(DISPLAY_NAME_MAX_LENGTH, `El nombre no puede superar ${DISPLAY_NAME_MAX_LENGTH} caracteres`)
     .trim()
     .transform((val) => sanitizeHtml(val)),
+});
+
+export const gameProposalSchema = z.object({
+  title: z
+    .string()
+    .min(GAME_TITLE_MIN_LENGTH, `El título debe tener al menos ${GAME_TITLE_MIN_LENGTH} caracteres`)
+    .max(GAME_TITLE_MAX_LENGTH, `El título no puede superar ${GAME_TITLE_MAX_LENGTH} caracteres`)
+    .trim()
+    .transform((val) => sanitizeHtml(val)),
+  description: z
+    .string()
+    .min(GAME_DESCRIPTION_MIN_LENGTH, `La descripción debe tener al menos ${GAME_DESCRIPTION_MIN_LENGTH} caracteres`)
+    .max(GAME_DESCRIPTION_MAX_LENGTH, `La descripción no puede superar ${GAME_DESCRIPTION_MAX_LENGTH} caracteres`)
+    .trim()
+    .transform((val) => sanitizeHtml(val)),
+});
+
+export const gameVoteSchema = z.object({
+  proposalId: z.string().uuid("ID de propuesta no válido"),
 });

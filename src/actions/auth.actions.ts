@@ -41,8 +41,9 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
   });
 
   if (error) {
+    // Generic message to prevent email enumeration
     if (error.message.includes("already registered")) {
-      return { success: false, error: "Este email ya está registrado." };
+      return { success: true };
     }
     return { success: false, error: "Error al crear la cuenta. Inténtalo de nuevo." };
   }

@@ -4,7 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
-  const type = searchParams.get("type") as "signup" | "email" | null;
+  const rawType = searchParams.get("type");
+  const ALLOWED_TYPES = ["signup", "email"] as const;
+  const type = ALLOWED_TYPES.includes(rawType as typeof ALLOWED_TYPES[number])
+    ? (rawType as typeof ALLOWED_TYPES[number])
+    : null;
 
   if (tokenHash && type) {
     const supabase = await createClient();

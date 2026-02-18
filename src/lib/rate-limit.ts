@@ -27,6 +27,8 @@ const RATE_LIMITS = {
   castVote: { windowMs: 10_000, maxRequests: 5 },
   auth: { windowMs: 60_000, maxRequests: 10 },
   moderationApi: { windowMs: 86_400_000, maxRequests: 3 },
+  submitGameProposal: { windowMs: 60_000, maxRequests: 3 },
+  castGameVote: { windowMs: 10_000, maxRequests: 5 },
 } as const satisfies Record<string, RateLimitConfig>;
 
 export type RateLimitAction = keyof typeof RATE_LIMITS;

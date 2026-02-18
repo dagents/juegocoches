@@ -20,19 +20,42 @@ export function getMadridDateString(): string {
 }
 
 /**
- * Returns milliseconds until the next 12:00 Madrid time.
+ * Returns true if current Madrid time is before noon (12:00).
  */
-export function getMillisUntilMadridNoon(): number {
+export function isBeforeMadridNoon(): boolean {
   const now = new Date();
   const madridNow = new Date(
     now.toLocaleString("en-US", { timeZone: MADRID_TZ })
   );
-  const madridNoon = new Date(madridNow);
-  madridNoon.setHours(12, 0, 0, 0);
+  return madridNow.getHours() < 12;
+}
 
-  if (madridNow >= madridNoon) {
-    madridNoon.setDate(madridNoon.getDate() + 1);
-  }
+/**
+ * Returns true if the game proposal/voting window is still open.
+ * Deadline: 19 Feb 2025 at 12:00 Madrid time.
+ * After that, no proposals or votes are accepted server-side.
+ */
+export function isGameVotingOpen(): boolean {
+  const now = new Date();
+  const madridNow = new Date(
+    now.toLocaleString("en-US", { timeZone: MADRID_TZ })
+  );
+  // Fixed deadline: tomorrow (19 Feb) at noon Madrid
+  const deadline = new Date("2026-02-19T12:00:00");
+  return madridNow < deadline;
+}
 
-  return madridNoon.getTime() - madridNow.getTime();
+/**
+ * Returns milliseconds until the next midnight Madrid time.
+ */
+export function getMillisUntilMadridMidnight(): number {
+  const now = new Date();
+  const madridNow = new Date(
+    now.toLocaleString("en-US", { timeZone: MADRID_TZ })
+  );
+  const madridMidnight = new Date(madridNow);
+  madridMidnight.setDate(madridMidnight.getDate() + 1);
+  madridMidnight.setHours(0, 0, 0, 0);
+
+  return madridMidnight.getTime() - madridNow.getTime();
 }

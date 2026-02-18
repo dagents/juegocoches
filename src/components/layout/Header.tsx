@@ -1,10 +1,15 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { signOut } from "@/actions/auth.actions";
 import { APP_NAME } from "@/lib/constants";
 
 export default async function Header() {
   const user = await getAuthUser();
+  const winningGame = await prisma.winningGame.findFirst({
+    select: { id: true },
+  });
+  const isPhase1 = !winningGame;
 
   return (
     <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-surface-card">
@@ -16,12 +21,21 @@ export default async function Header() {
         <nav className="flex items-center gap-3">
           {user ? (
             <>
-              <Link
-                href="/proponer"
-                className="text-sm text-neon-cyan hover:text-cyan-300 transition-colors"
-              >
-                Proponer Idea
-              </Link>
+              {isPhase1 ? (
+                <Link
+                  href="/proponer-juego"
+                  className="text-sm text-neon-cyan hover:text-cyan-300 transition-colors"
+                >
+                  Proponer Juego
+                </Link>
+              ) : (
+                <Link
+                  href="/proponer"
+                  className="text-sm text-neon-cyan hover:text-cyan-300 transition-colors"
+                >
+                  Proponer Mejora
+                </Link>
+              )}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-400 hidden sm:inline">
                   {user.user_metadata?.display_name ||

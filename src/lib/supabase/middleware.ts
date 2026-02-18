@@ -33,8 +33,15 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /proponer — require auth
-  if (!user && request.nextUrl.pathname.startsWith("/proponer")) {
+  // Protect authenticated routes
+  const protectedPaths = ["/proponer", "/proponer-juego"];
+  const isProtectedRoute = protectedPaths.some(
+    (path) =>
+      request.nextUrl.pathname === path ||
+      request.nextUrl.pathname.startsWith(path + "/")
+  );
+
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
