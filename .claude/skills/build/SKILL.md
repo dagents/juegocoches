@@ -1,13 +1,13 @@
 ---
 name: build
-description: Ejecutar lint y build de produccion
+description: Run lint and production build
 disable-model-invocation: true
 allowed-tools: Bash(npm run *)
 ---
 
-Ejecuta la verificacion completa del proyecto:
+Run full project verification:
 
-1. Ejecuta `npm run lint` para comprobar errores de ESLint
-2. Si hay errores de lint, corrigelos antes de continuar
-3. Ejecuta `npm run build` para verificar el build de produccion
-4. Reporta el resultado: rutas generadas, tamano del bundle, y cualquier warning
+1. Run `npm run lint` to check for ESLint errors
+2. If there are lint errors, fix them before continuing
+3. Run `npm run build` to verify the production build
+4. Report the result: generated routes, bundle size, and any warnings

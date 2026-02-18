@@ -3,19 +3,19 @@ paths:
   - "src/actions/**/*.ts"
 ---
 
-# Reglas para Server Actions
+# Server Action Rules
 
-Todas las Server Actions siguen el patron de 8 pasos y retornan `ActionResult<T>`:
+All Server Actions follow an 8-step pattern and return `ActionResult<T>`:
 
-1. **Auth**: `requireAuth()` de `@/lib/auth`
-2. **Ventana temporal**: verificar si la accion esta permitida (hora Madrid)
-3. **Rate limit**: `checkRateLimit(userId, action)` de `@/lib/rate-limit`
-4. **Validacion**: schema Zod con `sanitizeHtml` en transforms
-5. **Limite diario**: query Prisma de unicidad (1 por usuario por dia)
-6. **Moderacion IA**: si aplica, llamar a `moderateIdea()` o `moderateGameProposal()`
-7. **Escritura DB**: crear registro via Prisma
-8. **Revalidar**: `revalidatePath("/")`
+1. **Auth**: `requireAuth()` from `@/lib/auth`
+2. **Time window**: check if the action is allowed (Madrid time)
+3. **Rate limit**: `checkRateLimit(userId, action)` from `@/lib/rate-limit`
+4. **Validation**: Zod schema with `sanitizeHtml` transforms
+5. **Daily limit**: Prisma uniqueness query (1 per user per day)
+6. **AI moderation**: if applicable, call `moderateIdea()` or `moderateGameProposal()`
+7. **DB write**: create record via Prisma
+8. **Revalidate**: `revalidatePath("/poll")`
 
-- Usar `"use server"` al inicio del archivo.
-- Nunca exponer datos sensibles en el tipo de retorno.
-- Los errores para el usuario van en espanol, los `console.error` en ingles.
+- Use `"use server"` at the top of the file.
+- Never expose sensitive data in the return type.
+- User-facing errors in Spanish, `console.error` messages in English.

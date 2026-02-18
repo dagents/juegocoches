@@ -1,0 +1,262 @@
+# Best Practices — Next.js 14 · React 18 · TypeScript · Supabase · Prisma · Tailwind
+
+> General and standard rules for projects using this tech stack.
+> Project-specific instructions live in `CLAUDE.md`.
+
+---
+
+## Language Convention
+
+- **Everything in English**: code, variable names, function names, comments, commit messages, documentation, PR descriptions, branch names, and type definitions.
+- The only exception is **user-facing UI strings** (labels, error messages, placeholders, toasts) which may be in the target language (Spanish in this project).
+- Console logs, error logging, and developer-facing messages must be in English.
+
+---
+
+## TypeScript
+
+- Strict mode (`"strict": true`) always enabled. Never disable compiler rules to "fix" errors.
+- Never use `any`. Use `unknown` when the type is truly unknown and narrow with type guards.
+- Avoid `as` casts unless there is no alternative. Prefer type guards, Zod `.parse()`, or generics.
+- Prefer `interface` for objects and `type` for unions, intersections, and utility types.
+- Export types from dedicated files (`types/`), not scattered across implementation files.
+- Use `satisfies` to validate types at compile time without losing inference.
+- Define explicit return types on public functions and Server Actions.
+- Never use `enum` — use `as const` with a derived type (`typeof X[number]`).
+
+```typescript
+// ❌
+enum Status { Active = "active", Inactive = "inactive" }
+const data = response as MyType;
+
+// ✅
+const STATUS = ["active", "inactive"] as const;
+type Status = typeof STATUS[number];
+const data = mySchema.parse(response);
+```
+
+---
+
+## React 18
+
+- **Composition over inheritance**: small, composable components — not monoliths.
+- One component per file. File name = component name (PascalCase).
+- Type props with `interface` or `type`. Do not use `React.FC` — type props directly.
+- Local state with `useState`. Derived state should be computed in render, not in effects.
+- `useEffect` only for synchronization with external systems (DOM, subscriptions, browser APIs). Never for deriving state.
+- `useCallback` and `useMemo` only when there is a measured performance problem, not by default.
+- List keys: use stable IDs, never array indices (except for static immutable lists).
+- Do not manage forms with `useState` per field — use `FormData`, `useFormState`, or libraries like React Hook Form.
+
+```typescript
+// ❌
+const MyComponent: React.FC<Props> = ({ title }) => { ... }
+useEffect(() => { setFullName(first + last) }, [first, last])
+
+// ✅
+function MyComponent({ title }: Props) { ... }
+const fullName = first + last; // derived in render
+```
+
+---
+
+## Next.js 14 (App Router)
+
+### Server Components vs Client Components
+- **Server Components by default**. Only add `"use client"` when React hooks, event handlers, or browser APIs are needed.
+- Do not pass functions as props from Server to Client Components (they are not serializable).
+- Sensitive data (tokens, SQL queries, API keys) only in Server Components or Server Actions.
+- Use `loading.tsx` and `error.tsx` in each route for loading and error UX.
+
+### Server Actions
+- Mark with `"use server"` at the top of the file or function.
+- Always validate input with Zod — never trust `FormData` without validation.
+- Always verify authentication at the start of the action.
+- Return typed objects (`ActionResult<T>`), do not throw exceptions for business errors.
+- Use `revalidatePath()` or `revalidateTag()` after mutations to update the UI.
+- Do not expose internal data in error messages returned to the client.
+
+```typescript
+// ✅ Standard Server Action pattern
+"use server";
+export async function createItem(formData: FormData): Promise<ActionResult> {
+  const user = await requireAuth();          // 1. Auth
+  const parsed = schema.safeParse(raw);       // 2. Validation
+  if (!parsed.success) return { success: false, error: "..." };
+  await db.item.create({ data: parsed.data }); // 3. Mutation
+  revalidatePath("/items");                   // 4. Revalidation
+  return { success: true };
+}
+```
+
+### Routing
+- Place protected routes behind authentication middleware.
+- Use route groups `(group)` for shared layouts without affecting the URL.
+- Use `redirect()` for server-side redirects. Do not return conditional JSX for redirections.
+- API routes (`route.ts`) only for webhooks or external integrations. For internal mutations use Server Actions.
+
+### Data Fetching
+- Fetch data in Server Components, not in Client Components with `useEffect`.
+- Deduplicate requests with `fetch` (Next.js deduplicates automatically) or React `cache()`.
+- Avoid waterfalls: fetch in parallel with `Promise.all()` when requests are independent.
+
+---
+
+## Supabase
+
+### Authentication
+- Use `supabase.auth.getUser()` (validates JWT server-side) to verify auth in Server Actions and API routes.
+- Do not use `supabase.auth.getSession()` for authentication — it does not validate the JWT.
+- Store tokens in HTTP-only cookies via `@supabase/ssr`, not in localStorage.
+- Validate the `next` (redirect) parameter in OAuth callbacks to prevent open redirects.
+
+### Row Level Security (RLS)
+- **RLS always enabled** on all tables containing user data.
+- Each table must have explicit policies for SELECT, INSERT, UPDATE, DELETE.
+- Deny by default: if an operation has no policy, it must be denied.
+- Use `auth.uid()` in policies to bind data to the authenticated user.
+- SECURITY DEFINER functions must include `SET search_path = public`.
+- Count triggers are preferable to COUNT queries for frequently displayed data.
+
+```sql
+-- ✅ Standard RLS policy
+CREATE POLICY "users_own_data" ON public.items
+  FOR ALL USING (auth.uid() = user_id);
+
+-- ✅ Function with search_path
+CREATE OR REPLACE FUNCTION my_function()
+RETURNS TRIGGER AS $$ ... $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+```
+
+### Realtime
+- Subscribe only to the needed tables/events, not the entire database.
+- Clean up subscriptions in the `useEffect` cleanup or on component unmount.
+- Use Realtime filters to minimize data traffic.
+
+---
+
+## Prisma ORM
+
+- Define the schema as the source of truth. Map camelCase (TypeScript) to snake_case (PostgreSQL) with `@map()` and `@@map()`.
+- IDs as UUIDs generated by PostgreSQL (`@default(dbgenerated("gen_random_uuid()"))`), not by the application.
+- Use `@@unique` for business constraints (e.g., one vote per user per day). They act as a safety net against race conditions.
+- Use `select` or `include` explicitly — never fetch all columns/relations by default.
+- Wrap related operations in `prisma.$transaction()`.
+- Never expose the Prisma client to the browser. Only use it in Server Components, Server Actions, and API routes.
+
+```typescript
+// ❌ Fetches everything
+const users = await prisma.user.findMany();
+
+// ✅ Only what's needed
+const users = await prisma.user.findMany({
+  select: { id: true, name: true, email: true }
+});
+```
+
+---
+
+## Zod (Validation)
+
+- Define schemas for **all** external input: forms, query params, API responses, environment variables.
+- Use `.safeParse()` for validation that can fail. Use `.parse()` when failure is a programmer error.
+- Add transforms to normalize data (trim, lowercase, HTML sanitization).
+- Custom error messages for the end user, not technical messages.
+- Place schemas in dedicated files (`validation.ts` or `schemas/`), not inline in components.
+
+```typescript
+// ✅ Schema with transform and custom message
+const emailSchema = z
+  .string({ required_error: "Email is required" })
+  .email("Invalid email format")
+  .max(255)
+  .transform(v => v.trim().toLowerCase());
+```
+
+---
+
+## Tailwind CSS
+
+- **Utilities first**: do not create custom CSS classes except for complex animations or third-party styles.
+- Do not use `@apply` — it defeats the purpose of utility-first. If you need to reuse styles, extract a React component.
+- Responsive mobile-first: design for mobile and scale up with `sm:`, `md:`, `lg:`.
+- Use Tailwind's design system (spacing, colors, typography). Avoid arbitrary values (`w-[137px]`) except in rare cases.
+- Dark mode with `dark:` when applicable. Define semantic colors in `tailwind.config.ts`.
+- Group classes by category: layout → spacing → sizing → typography → colors → effects.
+
+```tsx
+// ❌
+<div className="p-4 text-blue-500 flex w-[137px] mt-2 bg-white items-center rounded">
+
+// ✅
+<div className="flex items-center gap-2 mt-2 p-4 w-36 rounded bg-white text-blue-500">
+```
+
+---
+
+## General Security
+
+### Input and Output
+- Validate all user input with Zod before any operation.
+- Sanitize HTML (entity encoding) in all text stored in the database.
+- Validate UUIDs and other identifiers to prevent SQL injection via parameters.
+- Validate external API responses (including AI) with Zod schemas before using them.
+- Limit string lengths in schemas to prevent storage abuse.
+
+### Authentication and Authorization
+- Verify authentication at the start of every Server Action and API route.
+- Rate limiting on all write actions and authentication endpoints.
+- Generic error messages in auth (do not reveal whether an email exists).
+- Never trust client-side data for authorization — always validate server-side.
+
+### HTTP Headers
+- `Content-Security-Policy` to mitigate XSS.
+- `Strict-Transport-Security` to enforce HTTPS.
+- `X-Frame-Options: DENY` to prevent clickjacking.
+- `X-Content-Type-Options: nosniff` to prevent MIME sniffing.
+- `Referrer-Policy: strict-origin-when-cross-origin` to limit information in referrers.
+- Do not use deprecated headers (`X-XSS-Protection`).
+
+### Secrets
+- Environment variables for all secrets. Never hardcode API keys, tokens, or passwords.
+- `.env.local` in `.gitignore`. Provide `.env.example` with placeholder values.
+- Distinguish public (`NEXT_PUBLIC_*`) from private variables. Public ones are exposed to the browser.
+- Validate that all required variables exist at application startup.
+
+### Prompt Injection Protection (when using AI)
+- Delimit user content with markers (e.g., XML tags) in prompts.
+- Sanitize user input before interpolation (strip XML tags, limit length).
+- Validate and sanitize AI responses before storing them.
+- Fail-closed: if the AI fails or returns unexpected output, deny by default.
+
+---
+
+## Performance
+
+- Lazy load heavy components: `dynamic(() => import(...), { ssr: false })`.
+- Images with `next/image` — never use `<img>` directly. Define `width`, `height`, and `alt`.
+- Avoid unnecessary re-renders: do not create inline objects/arrays in JSX as props.
+- Load only necessary data with `select`/`include` in Prisma.
+- Route prefetching with `<Link>` (Next.js does this automatically).
+
+---
+
+## Code Conventions
+
+- Files and folders: `kebab-case` for page files and utilities, `PascalCase` for components.
+- Imports: external dependencies first, then internal `@/` imports, separated by a blank line.
+- Do not leave commented-out code. If it's unused, delete it. Git is the history.
+- Do not use `console.log` in production. Use `console.error` for real errors that need debugging.
+- One default export per file for components. Named exports for utilities and types.
+- Pure functions whenever possible. Side effects grouped and isolated.
+
+---
+
+## Git and Commits
+
+- Atomic commits: one commit = one logical change.
+- Descriptive commit messages in imperative mood: "Add user auth", not "Added user auth".
+- Do not commit generated files (`node_modules/`, `.next/`, `prisma/generated/`).
+- Do not commit secrets. If committed by accident, rotate credentials immediately.
+- Pull requests with a description of the change and how to test it.

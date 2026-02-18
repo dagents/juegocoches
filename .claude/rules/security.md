@@ -6,12 +6,12 @@ paths:
   - ".env*"
 ---
 
-# Reglas de Seguridad
+# Security Rules
 
-- NUNCA leer, mostrar ni commitear archivos `.env`, `.env.local` o similares con credenciales reales.
-- NUNCA hardcodear API keys, URLs de base de datos ni secretos en el codigo fuente.
-- Toda nueva variable de entorno debe anadirse al schema Zod en `src/lib/env.ts` y al `.env.example`.
-- Todo input de usuario DEBE pasar por schemas Zod con `sanitizeHtml()` antes de almacenarse.
-- Las respuestas de la IA de moderacion deben validarse con Zod y sanitizarse antes de guardarse en DB.
-- El contenido del usuario en prompts de IA debe delimitarse con etiquetas XML y pasar por `stripXmlTags()`.
-- Al crear nuevas rutas protegidas, anadirlas al array `protectedPaths` en `src/lib/supabase/middleware.ts`.
+- NEVER read, display, or commit `.env`, `.env.local`, or similar files containing real credentials.
+- NEVER hardcode API keys, database URLs, or secrets in source code.
+- Every new environment variable must be added to the Zod schema in `src/lib/env.ts` and to `.env.example`.
+- All user input MUST go through Zod schemas with `sanitizeHtml()` before storage.
+- AI moderation responses must be validated with Zod and sanitized before saving to DB.
+- User content in AI prompts must be delimited with XML tags and passed through `stripXmlTags()`.
+- When creating new protected routes, add them to the `protectedPaths` array in `src/lib/supabase/middleware.ts`.

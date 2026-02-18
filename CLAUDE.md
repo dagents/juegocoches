@@ -1,117 +1,117 @@
-# JuegoCoches - Instrucciones para Claude Code
+# JuegoCoches - Claude Code Instructions
 
-> **IMPORTANTE**: Este proyecto es Next.js. Ignora cualquier instrucción heredada de `.ruler/` sobre Angular, Ionic o Capacitor — pertenecen a otro proyecto.
+> **IMPORTANT**: This is a Next.js project. Ignore any inherited `.ruler/` instructions about Angular, Ionic, or Capacitor — those belong to a different project.
 
-## Stack Técnico
+## Tech Stack
 
 - **Framework**: Next.js 14 (App Router, Server Components, Server Actions)
-- **Lenguaje**: TypeScript (strict mode)
+- **Language**: TypeScript (strict mode)
 - **UI**: React 18, Tailwind CSS 3, Framer Motion
 - **Auth**: Supabase Auth (email/password + Google OAuth)
-- **Base de datos**: PostgreSQL via Prisma 5 ORM (hosted en Supabase)
-- **Realtime**: Supabase Realtime (suscripciones en cliente)
-- **Validación**: Zod v4 con transforms de sanitización
-- **Moderación IA**: OpenRouter API (LLM-based, fail-closed)
-- **Notificaciones**: Sonner (toasts)
+- **Database**: PostgreSQL via Prisma 5 ORM (hosted on Supabase)
+- **Realtime**: Supabase Realtime (client-side subscriptions)
+- **Validation**: Zod v4 with sanitization transforms
+- **AI Moderation**: OpenRouter API (LLM-based, fail-closed)
+- **Notifications**: Sonner (toasts)
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 src/
-  actions/       → Server Actions ("use server"), un archivo por dominio
-  app/           → App Router: páginas y layouts
-    page.tsx     → Landing page (/ — dos botones: Juego y Encuesta)
-    (auth)/      → Grupo de rutas de auth (login, register)
-    auth/        → API routes de auth (callback OAuth, confirm email)
-    poll/        → Sistema de encuestas (/poll)
-      page.tsx   → Página principal de encuestas (ideas y propuestas)
-      proponer/  → Proponer mejoras diarias (/poll/proponer)
-      proponer-juego/ → Proponer juegos (/poll/proponer-juego)
-  components/    → Componentes React organizados por feature
-    ui/          → Primitivos reutilizables (Card, Badge, Button, Input)
-  hooks/         → Custom hooks cliente (useRealtimeIdeas, useUser, useCountdown)
-  lib/           → Utilidades compartidas
-    supabase/    → Clientes Supabase (client.ts, server.ts, middleware.ts)
-  types/         → Definiciones TypeScript
-prisma/          → Schema de Prisma
+  actions/       — Server Actions ("use server"), one file per domain
+  app/           — App Router: pages and layouts
+    page.tsx     — Landing page (/ — two buttons: Game and Poll)
+    (auth)/      — Auth route group (login, register)
+    auth/        — Auth API routes (OAuth callback, email confirm)
+    poll/        — Polling system (/poll)
+      page.tsx   — Main poll page (ideas and game proposals)
+      proponer/  — Propose daily improvements (/poll/proponer)
+      proponer-juego/ — Propose games (/poll/proponer-juego)
+  components/    — React components organized by feature
+    ui/          — Reusable UI primitives (Card, Badge, Button, Input)
+  hooks/         — Client-side hooks (useRealtimeIdeas, useUser, useCountdown)
+  lib/           — Shared utilities
+    supabase/    — Supabase clients (client.ts, server.ts, middleware.ts)
+  types/         — TypeScript type definitions
+prisma/          — Prisma schema
 supabase/
-  migrations/    → Migraciones SQL (RLS, triggers, etc.)
+  migrations/    — SQL migrations (RLS, triggers, etc.)
 ```
 
-## Patrones Arquitectónicos
+## Architectural Patterns
 
 ### Server Actions
-Todos siguen el patrón de 8 pasos y retornan `ActionResult<T>`:
+All follow an 8-step pattern and return `ActionResult<T>`:
 1. Auth (`requireAuth()`)
-2. Ventana temporal (`isBeforeMadridNoon()` / `isGameVotingOpen()`)
+2. Time window check (`isBeforeMadridNoon()` / `isGameVotingOpen()`)
 3. Rate limit (`checkRateLimit()`)
-4. Validación Zod (con `sanitizeHtml` en transforms)
-5. Límite diario (query Prisma de unicidad)
-6. Moderación IA (si aplica)
-7. Escritura en DB (Prisma)
+4. Zod validation (with `sanitizeHtml` transforms)
+5. Daily limit check (Prisma uniqueness query)
+6. AI moderation (if applicable)
+7. DB write (Prisma)
 8. `revalidatePath("/poll")`
 
-### Componentes
-- **Server Components** por defecto. Solo `"use client"` cuando se necesitan hooks o APIs del navegador.
-- Datos sensibles nunca pasan al cliente.
+### Components
+- **Server Components** by default. Only add `"use client"` when React hooks or browser APIs are needed.
+- Sensitive data never reaches the client.
 
-### Fechas y Timezone
-- **TODA** la lógica temporal usa timezone `Europe/Madrid` via `src/lib/dates.ts`.
-- No usar `new Date()` directamente para lógica de negocio — usar las utilidades del proyecto.
+### Dates and Timezone
+- **ALL** time-related logic uses `Europe/Madrid` timezone via `src/lib/dates.ts`.
+- Do not use `new Date()` directly for business logic — use the project's date utilities.
 
-### Base de datos
-- Prisma mapea camelCase (TS) a snake_case (PostgreSQL) via `@map()`.
-- IDs son UUIDs generados por PostgreSQL (`gen_random_uuid()`).
-- El conteo de votos lo manejan **triggers de PostgreSQL**, no código de aplicación.
-- Las constraints únicas (`@@unique`) son la red de seguridad contra race conditions.
+### Database
+- Prisma maps camelCase (TS) to snake_case (PostgreSQL) via `@map()`.
+- IDs are UUIDs generated by PostgreSQL (`gen_random_uuid()`).
+- Vote counting is handled by **PostgreSQL triggers**, not application code.
+- Unique constraints (`@@unique`) act as a safety net against race conditions.
 
-## Reglas de Seguridad
+## Security Rules
 
-### Secretos y API Keys
-- **NUNCA** commitear `.env`, `.env.local` ni archivos con credenciales reales.
-- Usar `.env.example` como referencia para contribuidores.
-- Todas las variables de entorno se validan al arrancar via `src/lib/env.ts`.
-- El `SUPABASE_SERVICE_ROLE_KEY` bypasea RLS — solo usarlo en server-side cuando sea estrictamente necesario.
+### Secrets and API Keys
+- **NEVER** commit `.env`, `.env.local`, or any file containing real credentials.
+- Use `.env.example` as a reference for contributors.
+- All environment variables are validated at startup via `src/lib/env.ts`.
+- `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS — only use it server-side when strictly necessary.
 
-### Input del usuario
-- Todo input pasa por schemas Zod con `sanitizeHtml()` (entity encoding) antes de almacenarse.
-- `sanitizeHtml()` está en `src/lib/security.ts` — es encoding de entidades HTML, adecuado para campos de texto plano.
-- UUIDs se validan con `z.string().uuid()` para prevenir inyección SQL via IDs.
+### User Input
+- All input goes through Zod schemas with `sanitizeHtml()` (entity encoding) before storage.
+- `sanitizeHtml()` lives in `src/lib/security.ts` — HTML entity encoding, suitable for plain-text fields.
+- UUIDs are validated with `z.string().uuid()` to prevent SQL injection via IDs.
 
-### Moderación IA
-- El contenido del usuario se delimita con etiquetas XML `<contenido_usuario>` en los prompts.
-- Se eliminan tags XML del input del usuario (`stripXmlTags()`) antes de interpolarlo.
-- El prompt del sistema instruye explícitamente a ignorar instrucciones del usuario.
-- Respuestas de la IA se validan con Zod (`ModerationResultSchema`).
-- Categorías se validan contra una lista permitida (allow-list).
-- El campo `motivo` se sanitiza con `sanitizeHtml()` y se trunca a 500 chars.
-- **Fail-closed**: cualquier error resulta en rechazo (`approved: false`).
+### AI Moderation
+- User content is delimited with `<contenido_usuario>` XML tags in prompts.
+- XML tags are stripped from user input (`stripXmlTags()`) before interpolation.
+- The system prompt explicitly instructs the LLM to ignore user-provided instructions.
+- AI responses are validated with Zod (`ModerationResultSchema`).
+- Categories are validated against an allow-list.
+- The `motivo` field is sanitized with `sanitizeHtml()` and truncated to 500 chars.
+- **Fail-closed**: any error results in rejection (`approved: false`).
 
 ### Rate Limiting
-- Implementado in-memory (`Map`) en `src/lib/rate-limit.ts`.
-- **Limitación conocida**: no persiste entre instancias serverless. Las constraints de DB actúan como respaldo.
-- Rate limits por acción: `submitIdea` (3/min), `castVote` (5/10s), `moderationApi` (3/día).
+- In-memory implementation (`Map`) in `src/lib/rate-limit.ts`.
+- **Known limitation**: does not persist across serverless instances. DB constraints act as a fallback.
+- Per-action limits: `submitIdea` (3/min), `castVote` (5/10s), `moderationApi` (3/day).
 
-### Middleware y rutas protegidas
-- Rutas autenticadas se definen explícitamente en `src/lib/supabase/middleware.ts`.
-- Al añadir una nueva ruta protegida, agregarla al array `protectedPaths`.
-- Auth usa `supabase.auth.getUser()` (valida JWT server-side), no `getSession()`.
+### Middleware and Protected Routes
+- Authenticated routes are explicitly defined in `src/lib/supabase/middleware.ts`.
+- When adding a new protected route, add it to the `protectedPaths` array.
+- Auth uses `supabase.auth.getUser()` (validates JWT server-side), not `getSession()`.
 
-## Comandos
+## Commands
 
 ```bash
-npm run dev          # Servidor de desarrollo
-npm run build        # Build de producción
-npm run start        # Iniciar servidor de producción
+npm run dev          # Development server
+npm run build        # Production build
+npm run start        # Start production server
 npm run lint         # ESLint
-npx prisma generate  # Regenerar cliente Prisma
-npx prisma db push   # Push schema a la DB
+npx prisma generate  # Regenerate Prisma client
+npx prisma db push   # Push schema to DB
 ```
 
-## Convenciones de Código
+## Code Conventions
 
-- Path alias: `@/*` mapea a `./src/*`
-- Tailwind para todo el styling, sin CSS modules
-- No usar `any` — tipar correctamente
-- Mensajes de error para el usuario en **español**, logs de consola en inglés
-- Imports: primero librerías externas, luego imports `@/` internos
+- Path alias: `@/*` maps to `./src/*`
+- Tailwind for all styling, no CSS modules
+- No `any` types — use proper typing
+- User-facing error messages in **Spanish**, console logs in English
+- Imports: external libraries first, then `@/` internal imports

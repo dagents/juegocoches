@@ -1,15 +1,15 @@
 ---
 name: check-security
-description: Auditar seguridad del proyecto
+description: Audit project security
 disable-model-invocation: true
 allowed-tools: Bash(npm *), Bash(npx *), Bash(git *)
 ---
 
-Ejecuta una auditoria de seguridad del proyecto:
+Run a project security audit:
 
-1. Ejecuta `npm audit` para verificar vulnerabilidades en dependencias
-2. Verifica que `.env` NO esta trackeado por git (`git ls-files .env`)
-3. Busca en el codigo fuente posibles secretos hardcodeados (API keys, passwords, tokens)
-4. Verifica que todas las variables de `src/lib/env.ts` estan en `.env.example`
-5. Revisa que las rutas protegidas en `src/lib/supabase/middleware.ts` cubren todas las paginas que requieren auth
-6. Reporta un resumen con los hallazgos y recomendaciones
+1. Run `npm audit` to check for dependency vulnerabilities
+2. Verify `.env` is NOT tracked by git (`git ls-files .env`)
+3. Search source code for possible hardcoded secrets (API keys, passwords, tokens)
+4. Verify all variables in `src/lib/env.ts` are present in `.env.example`
+5. Check that protected routes in `src/lib/supabase/middleware.ts` cover all pages requiring auth
+6. Report a summary with findings and recommendations

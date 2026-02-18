@@ -1,48 +1,48 @@
-# Politica de Seguridad - JuegoCoches
+# Security Policy - JuegoCoches
 
-## Reportar una Vulnerabilidad
+## Reporting a Vulnerability
 
-Si descubres una vulnerabilidad de seguridad en este proyecto, por favor reportala de forma responsable.
+If you discover a security vulnerability in this project, please report it responsibly.
 
-### Como reportar
+### How to Report
 
-1. **GitHub Security Advisories** (preferido): Ve a la pestana [Security](../../security/advisories) del repositorio y crea un nuevo advisory privado.
-2. **Issue privado**: Si no puedes usar Security Advisories, abre un issue con el titulo "Security: [descripcion breve]" y marca que contiene informacion sensible.
+1. **GitHub Security Advisories** (preferred): Go to the repository's [Security](../../security/advisories) tab and create a new private advisory.
+2. **Private issue**: If you cannot use Security Advisories, open an issue titled "Security: [brief description]" and flag it as containing sensitive information.
 
-### NO hacer
+### Do NOT
 
-- No publiques vulnerabilidades en issues publicos.
-- No explotes la vulnerabilidad mas alla de lo necesario para demostrarla.
+- Do not publish vulnerabilities in public issues.
+- Do not exploit the vulnerability beyond what is necessary to demonstrate it.
 
-## Alcance
+## Scope
 
-### Que reportar
-- Bypass de autenticacion o autorizacion
-- Inyeccion SQL, XSS, CSRF
-- Exposicion de datos de usuarios
-- Prompt injection en el sistema de moderacion IA
-- Exposicion de API keys o secretos en el codigo fuente
-- Vulnerabilidades en dependencias criticas
+### In Scope
+- Authentication or authorization bypass
+- SQL injection, XSS, CSRF
+- User data exposure
+- Prompt injection in the AI moderation system
+- API keys or secrets exposed in source code
+- Vulnerabilities in critical dependencies
 
-### Fuera de alcance
-- Ataques de denegacion de servicio (DoS)
+### Out of Scope
+- Denial of service (DoS) attacks
 - Social engineering
-- Self-XSS (requiere que la victima ejecute codigo en su propio navegador)
-- Vulnerabilidades en servicios de terceros (Supabase, OpenRouter) — reportalas directamente a ellos
+- Self-XSS (requires the victim to execute code in their own browser)
+- Vulnerabilities in third-party services (Supabase, OpenRouter) — report those directly to them
 
-## Limitaciones Conocidas
+## Known Limitations
 
-Estas limitaciones son de diseno y no se consideran vulnerabilidades a reportar:
+These are by design and should not be reported as vulnerabilities:
 
-- **Rate limiter in-memory**: El rate limiting usa un `Map` en memoria que no persiste entre instancias serverless. Las constraints de la base de datos (unique indexes) actuan como capa de seguridad adicional.
-- **Moderacion IA no es infalible**: El sistema de moderacion basado en LLM puede tener falsos positivos/negativos. El contenido aprobado por la IA aun puede ser reportado por la comunidad.
+- **In-memory rate limiter**: Rate limiting uses an in-memory `Map` that does not persist across serverless instances. Database constraints (unique indexes) act as an additional security layer.
+- **AI moderation is not infallible**: The LLM-based moderation system may have false positives/negatives. AI-approved content can still be reported by the community.
 
-## Tiempos de Respuesta
+## Response Times
 
-- **Confirmacion**: Intentaremos confirmar la recepcion del reporte en 48 horas.
-- **Evaluacion**: Evaluaremos la severidad en un plazo de 7 dias.
-- **Correccion**: Las vulnerabilidades criticas se priorizaran para su correccion inmediata.
+- **Acknowledgment**: We will try to confirm receipt of the report within 48 hours.
+- **Assessment**: We will evaluate severity within 7 days.
+- **Fix**: Critical vulnerabilities will be prioritized for immediate resolution.
 
-## Reconocimiento
+## Acknowledgment
 
-Agradecemos a quienes reportan vulnerabilidades de forma responsable. Si lo deseas, te mencionaremos en los agradecimientos del proyecto (salvo que prefieras anonimato).
+We appreciate those who report vulnerabilities responsibly. If you wish, we will mention you in the project's acknowledgments (unless you prefer anonymity).

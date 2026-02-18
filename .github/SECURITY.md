@@ -1,7 +1,7 @@
-# Politica de Seguridad
+# Security Policy
 
-Para reportar vulnerabilidades de seguridad, consulta nuestra [politica completa](../SECURITY.md) en la raiz del proyecto.
+To report security vulnerabilities, see our [full policy](../SECURITY.md) at the project root.
 
-**Forma preferida de reporte**: Usa [GitHub Security Advisories](../../security/advisories) para crear un reporte privado.
+**Preferred reporting method**: Use [GitHub Security Advisories](../../security/advisories) to create a private report.
 
-No publiques vulnerabilidades en issues publicos.
+Do not publish vulnerabilities in public issues.
