@@ -40,6 +40,9 @@ next-env.d.ts
 # prisma
 prisma/migrations/
 
+# npm lockfile (project uses pnpm)
+package-lock.json
+
 # claude code (local overrides)
 .claude/settings.local.json
 CLAUDE.local.md

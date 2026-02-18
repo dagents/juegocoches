@@ -4,11 +4,12 @@
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router, Server Components, Server Actions)
+- **Framework**: Next.js 16 (App Router, Server Components, Server Actions)
 - **Language**: TypeScript (strict mode)
-- **UI**: React 18, Tailwind CSS 3, Framer Motion
+- **UI**: React 19, Tailwind CSS 4, Framer Motion
 - **Auth**: Supabase Auth (email/password + Google OAuth)
-- **Database**: PostgreSQL via Prisma 5 ORM (hosted on Supabase)
+- **Database**: PostgreSQL via Prisma 7 ORM (hosted on Supabase)
+- **Package Manager**: pnpm
 - **Realtime**: Supabase Realtime (client-side subscriptions)
 - **Validation**: Zod v4 with sanitization transforms
 - **AI Moderation**: OpenRouter API (LLM-based, fail-closed)
@@ -100,10 +101,10 @@ All follow an 8-step pattern and return `ActionResult<T>`:
 ## Commands
 
 ```bash
-npm run dev          # Development server
-npm run build        # Production build
-npm run start        # Start production server
-npm run lint         # ESLint
+pnpm dev             # Development server
+pnpm build           # Production build
+pnpm start           # Start production server
+pnpm lint            # ESLint
 npx prisma generate  # Regenerate Prisma client
 npx prisma db push   # Push schema to DB
 ```
