@@ -20,10 +20,13 @@
 src/
   actions/       → Server Actions ("use server"), un archivo por dominio
   app/           → App Router: páginas y layouts
+    page.tsx     → Landing page (/ — dos botones: Juego y Encuesta)
     (auth)/      → Grupo de rutas de auth (login, register)
     auth/        → API routes de auth (callback OAuth, confirm email)
-    proponer/    → Página para proponer mejoras diarias
-    proponer-juego/ → Página para proponer juegos
+    poll/        → Sistema de encuestas (/poll)
+      page.tsx   → Página principal de encuestas (ideas y propuestas)
+      proponer/  → Proponer mejoras diarias (/poll/proponer)
+      proponer-juego/ → Proponer juegos (/poll/proponer-juego)
   components/    → Componentes React organizados por feature
     ui/          → Primitivos reutilizables (Card, Badge, Button, Input)
   hooks/         → Custom hooks cliente (useRealtimeIdeas, useUser, useCountdown)
@@ -46,7 +49,7 @@ Todos siguen el patrón de 8 pasos y retornan `ActionResult<T>`:
 5. Límite diario (query Prisma de unicidad)
 6. Moderación IA (si aplica)
 7. Escritura en DB (Prisma)
-8. `revalidatePath("/")`
+8. `revalidatePath("/poll")`
 
 ### Componentes
 - **Server Components** por defecto. Solo `"use client"` cuando se necesitan hooks o APIs del navegador.

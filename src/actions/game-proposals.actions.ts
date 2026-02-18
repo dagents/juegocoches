@@ -81,7 +81,7 @@ export async function submitGameProposal(
     });
 
     // 8. Revalidate
-    revalidatePath("/");
+    revalidatePath("/poll");
 
     return {
       success: true,

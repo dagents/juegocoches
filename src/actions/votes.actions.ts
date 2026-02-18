@@ -63,7 +63,7 @@ export async function castVote(formData: FormData): Promise<ActionResult> {
     });
 
     // 8. Revalidate
-    revalidatePath("/");
+    revalidatePath("/poll");
 
     return { success: true };
   } catch (error) {

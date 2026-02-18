@@ -77,7 +77,7 @@ export async function submitIdea(
     });
 
     // 8. Revalidate
-    revalidatePath("/");
+    revalidatePath("/poll");
 
     return {
       success: true,

@@ -23,14 +23,14 @@ export default async function Header() {
             <>
               {isPhase1 ? (
                 <Link
-                  href="/proponer-juego"
+                  href="/poll/proponer-juego"
                   className="text-sm text-neon-cyan hover:text-cyan-300 transition-colors"
                 >
                   Proponer Juego
                 </Link>
               ) : (
                 <Link
-                  href="/proponer"
+                  href="/poll/proponer"
                   className="text-sm text-neon-cyan hover:text-cyan-300 transition-colors"
                 >
                   Proponer Mejora

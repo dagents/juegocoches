@@ -82,7 +82,7 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
     return { success: false, error: "Email o contraseña incorrectos." };
   }
 
-  redirect("/");
+  redirect("/poll");
 }
 
 export async function signOut(): Promise<void> {

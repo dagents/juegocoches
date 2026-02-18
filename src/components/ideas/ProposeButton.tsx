@@ -39,7 +39,7 @@ export default function ProposeButton() {
   return (
     <div className="text-center">
       <Link
-        href="/proponer"
+        href="/poll/proponer"
         className="inline-flex items-center px-6 py-2.5 bg-neon-purple hover:bg-purple-600 text-white rounded-lg font-medium transition-colors neon-glow-purple"
       >
         Proponer Mejora del Día

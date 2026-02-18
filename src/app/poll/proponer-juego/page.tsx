@@ -60,7 +60,7 @@ export default async function ProponerJuegoPage() {
                 )}
               </div>
               <Link
-                href="/"
+                href="/poll"
                 className="inline-flex text-sm text-neon-cyan hover:text-cyan-300 transition-colors"
               >
                 &larr; Volver al ranking
