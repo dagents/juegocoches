@@ -1,6 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0a0a0f;
+  --color-foreground: #e2e2f0;
+  --color-neon-purple: #a855f7;
+  --color-neon-cyan: #22d3ee;
+  --color-neon-pink: #ec4899;
+  --color-surface: #0a0a0f;
+  --color-surface-card: #111118;
+  --color-surface-elevated: #1a1a25;
+  --color-success: #22c55e;
+  --color-destructive: #ef4444;
+
+  --animate-pulse-neon: pulse-neon 2s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.3s ease-out;
+
+  @keyframes pulse-neon {
+    0%, 100% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.8); }
+  }
+
+  @keyframes fade-in {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+}
 
 :root {
   --background: #0a0a0f;
@@ -33,33 +57,27 @@ body {
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+@utility neon-glow-purple {
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4),
+    0 0 30px rgba(168, 85, 247, 0.15);
+}
 
-  .neon-glow-purple {
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.4),
-      0 0 30px rgba(168, 85, 247, 0.15);
-  }
+@utility neon-glow-cyan {
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.4),
+    0 0 30px rgba(34, 211, 238, 0.15);
+}
 
-  .neon-glow-cyan {
-    box-shadow: 0 0 10px rgba(34, 211, 238, 0.4),
-      0 0 30px rgba(34, 211, 238, 0.15);
-  }
+@utility neon-border-purple {
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
 
-  .neon-border-purple {
-    border: 1px solid rgba(168, 85, 247, 0.4);
-  }
+@utility neon-border-cyan {
+  border: 1px solid rgba(34, 211, 238, 0.4);
+}
 
-  .neon-border-cyan {
-    border: 1px solid rgba(34, 211, 238, 0.4);
-  }
-
-  .gradient-text {
-    background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+@utility gradient-text {
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
