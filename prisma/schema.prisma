@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id          String   @id @db.Uuid
+  email       String   @unique
+  displayName String?  @map("display_name")
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  ideas Idea[]
+  votes Vote[]
+
+  @@map("profiles")
+}
+
+model Idea {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  content         String       @db.VarChar(500)
+  approved        Boolean?
+  rejectionReason String?      @map("rejection_reason") @db.VarChar(500)
+  category        String?      @db.VarChar(50)
+  votesCount      Int          @default(0) @map("votes_count")
+  dayDate         DateTime     @map("day_date") @db.Date
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  user        Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes       Vote[]
+  dailyWinner DailyWinner?
+
+  @@unique([userId, dayDate], name: "one_idea_per_user_per_day")
+  @@index([dayDate, approved])
+  @@index([dayDate, votesCount(sort: Desc)])
+  @@map("ideas")
+}
+
+model Vote {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  ideaId    String   @map("idea_id") @db.Uuid
+  dayDate   DateTime @map("day_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea Idea    @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dayDate], name: "one_vote_per_user_per_day")
+  @@index([ideaId])
+  @@map("votes")
+}
+
+model DailyWinner {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ideaId      String   @unique @map("idea_id") @db.Uuid
+  dayDate     DateTime @unique @map("day_date") @db.Date
+  implemented Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@map("daily_winners")
+}

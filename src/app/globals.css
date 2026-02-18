@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0f;
+  --foreground: #e2e2f0;
+  --card: #111118;
+  --card-border: #2a2a3d;
+  --muted: #6b6b80;
+  --neon-purple: #a855f7;
+  --neon-cyan: #22d3ee;
+  --neon-pink: #ec4899;
+  --success: #22c55e;
+  --destructive: #ef4444;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+@layer base {
+  * {
+    border-color: var(--card-border);
+  }
+
+  ::selection {
+    background: rgba(168, 85, 247, 0.3);
+    color: white;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .neon-glow-purple {
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.4),
+      0 0 30px rgba(168, 85, 247, 0.15);
+  }
+
+  .neon-glow-cyan {
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.4),
+      0 0 30px rgba(34, 211, 238, 0.15);
+  }
+
+  .neon-border-purple {
+    border: 1px solid rgba(168, 85, 247, 0.4);
+  }
+
+  .neon-border-cyan {
+    border: 1px solid rgba(34, 211, 238, 0.4);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
