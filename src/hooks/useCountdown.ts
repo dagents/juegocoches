@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 const MADRID_TZ = "Europe/Madrid";
 
-function getSecondsUntilMadridTarget(target: "midnight" | "tomorrow-noon"): number {
+function getSecondsUntilMadridTarget(target: "midnight" | "next-noon"): number {
   const now = new Date();
   const madridNow = new Date(
     now.toLocaleString("en-US", { timeZone: MADRID_TZ })
@@ -15,15 +15,17 @@ function getSecondsUntilMadridTarget(target: "midnight" | "tomorrow-noon"): numb
     madridTarget.setDate(madridTarget.getDate() + 1);
     madridTarget.setHours(0, 0, 0, 0);
   } else {
-    // tomorrow-noon: next day at 12:00
-    madridTarget.setDate(madridTarget.getDate() + 1);
+    // next-noon: today at 12:00 if before noon, otherwise tomorrow at 12:00
     madridTarget.setHours(12, 0, 0, 0);
+    if (madridNow >= madridTarget) {
+      madridTarget.setDate(madridTarget.getDate() + 1);
+    }
   }
 
   return Math.max(0, Math.floor((madridTarget.getTime() - madridNow.getTime()) / 1000));
 }
 
-export function useCountdown(target: "midnight" | "tomorrow-noon" = "midnight") {
+export function useCountdown(target: "midnight" | "next-noon" = "midnight") {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   useEffect(() => {

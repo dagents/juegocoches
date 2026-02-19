@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, ensureProfile } from "@/lib/auth";
 import { ideaSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { moderateIdea } from "@/lib/moderation";
@@ -15,6 +15,7 @@ export async function submitIdea(
   try {
     // 1. Auth
     const user = await requireAuth();
+    await ensureProfile(user);
 
     // 2. Check proposal window (before noon Madrid)
     if (!isBeforeMadridNoon()) {

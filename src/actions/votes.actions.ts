@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, ensureProfile } from "@/lib/auth";
 import { voteSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getMadridDateToday } from "@/lib/dates";
@@ -12,6 +12,7 @@ export async function castVote(formData: FormData): Promise<ActionResult> {
   try {
     // 1. Auth
     const user = await requireAuth();
+    await ensureProfile(user);
 
     // 2. Rate limit
     const rl = checkRateLimit(user.id, "castVote");

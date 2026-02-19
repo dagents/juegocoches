@@ -18,7 +18,7 @@ function TimeUnit({ value, label }: { value: number; label: string }) {
 }
 
 interface MadridCountdownProps {
-  target?: "midnight" | "tomorrow-noon";
+  target?: "midnight" | "next-noon";
 }
 
 export default function MadridCountdown({ target = "midnight" }: MadridCountdownProps) {

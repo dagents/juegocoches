@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, ensureProfile } from "@/lib/auth";
 import { gameVoteSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getMadridDateToday, isGameVotingOpen } from "@/lib/dates";
@@ -12,6 +12,7 @@ export async function castGameVote(formData: FormData): Promise<ActionResult> {
   try {
     // 1. Auth
     const user = await requireAuth();
+    await ensureProfile(user);
 
     // 2. Check voting window
     if (!isGameVotingOpen()) {
@@ -46,12 +47,11 @@ export async function castGameVote(formData: FormData): Promise<ActionResult> {
       return { success: false, error: "Ya has votado hoy." };
     }
 
-    // 5. Proposal exists, approved, from today?
+    // 5. Proposal exists and approved?
     const proposal = await prisma.gameProposal.findFirst({
       where: {
         id: proposalId,
         approved: true,
-        proposalDate: todayDate,
       },
     });
     if (!proposal) {

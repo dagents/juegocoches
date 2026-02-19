@@ -59,10 +59,8 @@ async function getWinningGame(): Promise<WinningGameWithProposal | null> {
   return winner as WinningGameWithProposal | null;
 }
 
-async function getTodayGameProposals(): Promise<GameProposalWithUser[]> {
-  const todayDate = getMadridDateToday();
+async function getAllGameProposals(): Promise<GameProposalWithUser[]> {
   const proposals = await prisma.gameProposal.findMany({
-    where: { proposalDate: todayDate },
     orderBy: [{ votesCount: "desc" }, { createdAt: "asc" }],
   });
   return proposals as GameProposalWithUser[];
@@ -84,7 +82,7 @@ export default async function HomePage() {
 
   if (!winningGame) {
     // ===== PHASE 1: Game proposals =====
-    const proposals = await getTodayGameProposals();
+    const proposals = await getAllGameProposals();
     const hasVotedGame = user ? await hasUserVotedGameToday(user.id) : false;
 
     return (
@@ -99,7 +97,7 @@ export default async function HomePage() {
             juego que construiremos juntos.
           </p>
           <Badge variant="warning">Votaciones abiertas hasta mañana a las 12:00</Badge>
-          <MadridCountdown target="tomorrow-noon" />
+          <MadridCountdown target="next-noon" />
         </section>
 
         {/* CTA */}
