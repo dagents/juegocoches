@@ -18,10 +18,16 @@ import NewGameScreen from "./NewGameScreen";
 const GameScene = dynamic(() => import("../scene/GameScene"), {
   ssr: false,
   loading: () => (
-    <div className="w-full aspect-video rounded-xl bg-surface-card border border-surface-card flex items-center justify-center">
-      <div className="text-center space-y-2">
-        <div className="text-2xl animate-pulse">🌍</div>
+    <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-surface-card">
+      <div className="text-center space-y-3 px-4">
+        <div className="text-3xl animate-bounce">🌍</div>
         <p className="text-sm text-gray-400">Cargando mundo 3D...</p>
+        <div className="w-32 h-1.5 bg-surface-elevated rounded-full overflow-hidden mx-auto">
+          <div
+            className="h-full bg-neon-purple rounded-full"
+            style={{ animation: "loading-bar 2s ease-in-out infinite" }}
+          />
+        </div>
       </div>
     </div>
   ),

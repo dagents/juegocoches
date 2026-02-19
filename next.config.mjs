@@ -23,6 +23,10 @@ const nextConfig = {
               "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://openrouter.ai; img-src 'self' data: https://lh3.googleusercontent.com; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests;",
           },
           {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow",
+          },
+          {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",
           },
