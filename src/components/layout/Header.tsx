@@ -20,12 +20,20 @@ export default async function Header() {
 
         <nav className="flex items-center gap-3">
           {!isPhase1 && (
-            <Link
-              href="/poll/juego"
-              className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
-            >
-              🏆 Juego
-            </Link>
+            <>
+              <Link
+                href="/game"
+                className="text-sm px-3 py-1 bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 rounded-lg transition-colors border border-neon-cyan/30"
+              >
+                🎮 Jugar
+              </Link>
+              <Link
+                href="/poll/juego"
+                className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                🏆 Votación
+              </Link>
+            </>
           )}
           {user ? (
             <>

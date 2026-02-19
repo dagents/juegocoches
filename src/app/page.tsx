@@ -12,25 +12,26 @@ export default function HomePage() {
           <p className="text-gray-400 text-lg">
             La comunidad decide. Juega, propone y vota.
           </p>
+          <p className="text-gray-500 text-sm">
+            🎮 El destino en tus manos — v1.0
+          </p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          {/* Juego — próximamente */}
-          <div className="relative">
-            <span className="inline-flex items-center px-8 py-3.5 bg-surface-elevated text-gray-500 rounded-xl font-semibold text-lg cursor-not-allowed border border-surface-card">
-              Juego
-            </span>
-            <span className="absolute -top-2 -right-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-neon-pink/20 text-neon-pink border border-neon-pink/30 rounded-full">
-              Pronto
-            </span>
-          </div>
+          {/* Juego */}
+          <Link
+            href="/game"
+            className="inline-flex items-center px-8 py-3.5 bg-neon-cyan hover:bg-cyan-600 text-black rounded-xl font-semibold text-lg transition-colors"
+          >
+            🎮 Jugar
+          </Link>
 
           {/* Encuesta */}
           <Link
             href="/poll"
             className="inline-flex items-center px-8 py-3.5 bg-neon-purple hover:bg-purple-600 text-white rounded-xl font-semibold text-lg transition-colors neon-glow-purple"
           >
-            Encuesta
+            📊 Encuesta
           </Link>
         </div>
       </div>

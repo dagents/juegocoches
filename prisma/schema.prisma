@@ -18,6 +18,7 @@ model Profile {
   votes         Vote[]
   gameProposals GameProposal[]
   gameVotes     GameVote[]
+  gameSave      GameSave?
 
   @@map("profiles")
 }
@@ -115,4 +116,33 @@ model WinningGame {
   proposal GameProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 
   @@map("winning_game")
+}
+
+model GameSave {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  gameState   Json     @map("game_state")
+  currentAge  Int      @map("current_age")
+  currentMonth Int     @map("current_month")
+  isAlive     Boolean  @default(true) @map("is_alive")
+  score       Int      @default(0)
+  countryCode String   @map("country_code") @db.VarChar(3)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("game_saves")
+}
+
+model GameVersion {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  versionNumber String   @map("version_number") @db.VarChar(20)
+  title         String   @db.VarChar(200)
+  description   String   @db.Text
+  proposedBy    String?  @map("proposed_by") @db.Uuid
+  votesReceived Int      @default(0) @map("votes_received")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("game_versions")
 }
