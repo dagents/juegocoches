@@ -91,7 +91,7 @@ export default function GameOverScreen({ gameState, onNewGame }: GameOverScreenP
         <h3 className="text-sm font-semibold text-foreground mb-3">
           Resumen de vida
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {[
             { label: "Dinero", value: gameState.stats.money, icon: "💰" },
             { label: "Educación", value: gameState.stats.education, icon: "🎓" },
@@ -145,7 +145,7 @@ export default function GameOverScreen({ gameState, onNewGame }: GameOverScreenP
       >
         <button
           onClick={onNewGame}
-          className="px-6 py-3 bg-neon-purple hover:bg-purple-600 text-white rounded-xl font-semibold transition-colors neon-glow-purple"
+          className="w-full sm:w-auto px-6 py-4 sm:py-3 bg-neon-purple hover:bg-purple-600 active:bg-purple-700 text-white rounded-xl font-semibold transition-colors neon-glow-purple min-h-[48px]"
         >
           Nueva vida 🔄
         </button>

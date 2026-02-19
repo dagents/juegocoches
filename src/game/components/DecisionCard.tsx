@@ -76,21 +76,21 @@ export default function DecisionCard({
               onMouseEnter={() => setHoveredId(optKey)}
               onMouseLeave={() => setHoveredId(null)}
               disabled={isDisabledOption}
-              className={`w-full text-left p-3 rounded-lg border transition-all ${
+              className={`w-full text-left p-3.5 sm:p-3 rounded-lg border transition-all min-h-[44px] ${
                 isSelected
                   ? "border-neon-cyan bg-neon-cyan/10 text-foreground"
                   : isHovered && !isDisabledOption
                   ? "border-neon-purple/50 bg-surface-elevated text-foreground"
                   : isDisabledOption
                   ? "border-surface-card bg-surface opacity-40 cursor-not-allowed"
-                  : "border-surface-card bg-surface-elevated text-gray-300 hover:text-foreground"
+                  : "border-surface-card bg-surface-elevated text-gray-300 hover:text-foreground active:bg-surface-elevated/80"
               }`}
             >
               <div className="flex items-start gap-2">
-                <span className="text-sm mt-0.5">
+                <span className="text-base sm:text-sm mt-0.5">
                   {isSelected ? "✓" : "›"}
                 </span>
-                <span className="text-sm leading-relaxed">{option.text}</span>
+                <span className="text-base sm:text-sm leading-relaxed">{option.text}</span>
               </div>
 
               {/* Show success chance if applicable */}

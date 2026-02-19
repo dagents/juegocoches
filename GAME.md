@@ -15,6 +15,18 @@
 - Profundidad desde el inicio → sistema de decisiones rico, no 2-3 opciones genericas
 - Cada update diaria anade una capa → el core ya tiene que ser solido para soportar expansiones infinitas
 
+### 📱 RESPONSIVE — MUY IMPORTANTE
+
+**TODO el juego DEBE ser 100% responsive.** La mayoría de usuarios de ForoCoches entran desde móvil. Si no funciona bien en móvil, no funciona.
+
+- **Mobile-first siempre** → diseñar primero para pantallas pequeñas, luego escalar
+- **La escena 3D debe adaptarse** → canvas responsive que ocupe el ancho disponible sin romper el layout
+- **UI táctil** → botones grandes, touch targets mínimo 44px, sin hover-only interactions
+- **Paneles reorganizables** → en desktop: side-by-side (3D + stats). En móvil: stacked vertical
+- **Texto legible** → mínimo 14px en móvil, sin scroll horizontal nunca
+- **Testear en viewport 375px** (iPhone SE) como referencia mínima
+- **No depender de teclado** → todo controlable con taps/clicks
+
 ---
 
 ## 2. Concepto del juego

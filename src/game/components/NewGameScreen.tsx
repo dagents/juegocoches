@@ -87,7 +87,7 @@ export default function NewGameScreen({ onStart, loading = false }: NewGameScree
         <button
           onClick={rollCharacter}
           disabled={!canRoll || rolling || loading}
-          className="px-8 py-4 bg-neon-purple hover:bg-purple-600 disabled:bg-gray-700 text-white rounded-xl font-bold text-lg transition-all neon-glow-purple disabled:opacity-50"
+          className="w-full sm:w-auto px-8 py-4 bg-neon-purple hover:bg-purple-600 active:bg-purple-700 disabled:bg-gray-700 text-white rounded-xl font-bold text-lg transition-all neon-glow-purple disabled:opacity-50 min-h-[48px]"
         >
           {rolling ? (
             <span className="flex items-center gap-2">
@@ -172,7 +172,7 @@ export default function NewGameScreen({ onStart, loading = false }: NewGameScree
           </div>
 
           {/* Starting stats */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-4 gap-2">
             {[
               { label: "💰", value: preview.stats.money },
               { label: "🎓", value: preview.stats.education },
@@ -194,7 +194,7 @@ export default function NewGameScreen({ onStart, loading = false }: NewGameScree
           <button
             onClick={handleStart}
             disabled={loading}
-            className="w-full py-3 bg-neon-cyan hover:bg-cyan-600 disabled:bg-gray-700 text-black font-bold rounded-xl transition-colors text-lg"
+            className="w-full py-4 sm:py-3 bg-neon-cyan hover:bg-cyan-600 active:bg-cyan-700 disabled:bg-gray-700 text-black font-bold rounded-xl transition-colors text-lg min-h-[48px]"
           >
             {loading ? "Creando tu vida..." : "🚀 Empezar esta vida"}
           </button>
