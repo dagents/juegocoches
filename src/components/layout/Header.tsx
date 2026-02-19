@@ -19,6 +19,14 @@ export default async function Header() {
         </Link>
 
         <nav className="flex items-center gap-3">
+          {!isPhase1 && (
+            <Link
+              href="/poll/juego"
+              className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
+            >
+              🏆 Juego
+            </Link>
+          )}
           {user ? (
             <>
               {isPhase1 ? (
