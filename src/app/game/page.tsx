@@ -8,21 +8,32 @@ import type { GameState } from "@/game/engine/GameState";
 import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs"; // Force Node.js runtime, not edge
 
 export default async function GamePage() {
   const user = await getAuthUser();
   if (!user) redirect("/login");
 
-  // Load existing save
-  const save = await prisma.gameSave.findUnique({
-    where: { userId: user.id },
-  });
+  let initialState: GameState | null = null;
+  let leaderboardEntries: Awaited<ReturnType<typeof getLeaderboard>>["data"] = [];
 
-  const initialState = save?.gameState as unknown as GameState | null;
+  try {
+    // Load existing save
+    const save = await prisma.gameSave.findUnique({
+      where: { userId: user.id },
+    });
+    initialState = save?.gameState as unknown as GameState | null;
+  } catch (e) {
+    console.error("Failed to load game save:", e);
+  }
 
-  // Fetch leaderboard server-side
-  const leaderboardResult = await getLeaderboard();
-  const leaderboardEntries = leaderboardResult.success && leaderboardResult.data ? leaderboardResult.data : [];
+  try {
+    // Fetch leaderboard server-side
+    const leaderboardResult = await getLeaderboard();
+    leaderboardEntries = leaderboardResult.success && leaderboardResult.data ? leaderboardResult.data : [];
+  } catch (e) {
+    console.error("Failed to load leaderboard:", e);
+  }
 
   async function handleSubmitScore(score: number, biography: string) {
     "use server";
@@ -45,7 +56,7 @@ export default async function GamePage() {
         initialState={initialState}
         onSave={handleSave}
         onNewGame={handleNewGame}
-        leaderboardEntries={leaderboardEntries}
+        leaderboardEntries={leaderboardEntries ?? []}
         onSubmitScore={handleSubmitScore}
       />
       <div className="max-w-7xl mx-auto px-3 sm:px-4">

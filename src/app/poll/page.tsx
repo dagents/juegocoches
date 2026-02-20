@@ -150,8 +150,9 @@ export default async function HomePage() {
           </p>
         </div>
         <p className="text-gray-400 max-w-md mx-auto">
-          La comunidad propone mejoras, vota y transforma. Una mejora gana cada día.
+          Vota por la mejora que quieres ver mañana. La más votada se implementa al día siguiente.
         </p>
+        <Badge variant="info">🗳️ Vota hoy → Se implementa mañana</Badge>
         <MadridCountdown />
       </section>
 
