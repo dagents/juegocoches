@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { startNewGame, saveGameState } from "@/actions/game.actions";
+import { startNewGame, saveGameState, getLeaderboard, submitScore } from "@/actions/game.actions";
 import GameLayout from "@/game/components/GameLayout";
 import GameChangelog from "@/game/components/GameChangelog";
 import type { GameState } from "@/game/engine/GameState";
@@ -20,6 +20,15 @@ export default async function GamePage() {
 
   const initialState = save?.gameState as unknown as GameState | null;
 
+  // Fetch leaderboard server-side
+  const leaderboardResult = await getLeaderboard();
+  const leaderboardEntries = leaderboardResult.success && leaderboardResult.data ? leaderboardResult.data : [];
+
+  async function handleSubmitScore(score: number, biography: string) {
+    "use server";
+    await submitScore(score, biography);
+  }
+
   async function handleSave(state: GameState) {
     "use server";
     await saveGameState(JSON.parse(JSON.stringify(state)) as Prisma.InputJsonValue);
@@ -36,6 +45,8 @@ export default async function GamePage() {
         initialState={initialState}
         onSave={handleSave}
         onNewGame={handleNewGame}
+        leaderboardEntries={leaderboardEntries}
+        onSubmitScore={handleSubmitScore}
       />
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <GameChangelog />

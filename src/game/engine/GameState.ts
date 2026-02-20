@@ -89,6 +89,9 @@ export interface GameState {
   difficulty: 'normal' | 'forocochero';
   forococheroSurvived: boolean;
 
+  // Taku villain
+  takuEncounters: number;
+
   // Status
   isAlive: boolean;
   causeOfDeath: string | null;

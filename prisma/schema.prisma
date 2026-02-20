@@ -126,6 +126,7 @@ model GameSave {
   currentMonth Int     @map("current_month")
   isAlive     Boolean  @default(true) @map("is_alive")
   score       Int      @default(0)
+  biography   String?  @db.Text
   countryCode String   @map("country_code") @db.VarChar(3)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")

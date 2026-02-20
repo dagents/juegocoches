@@ -1,16 +1,29 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import type { GameState } from "../engine/GameState";
-import { calculateScore, getAgePhaseLabel, getAgePhase } from "../engine/GameState";
+import { calculateScore } from "../engine/GameState";
+import { generateBiography } from "../engine/BiographyGenerator";
 
 interface GameOverScreenProps {
   gameState: GameState;
   onNewGame: () => void;
+  onSubmitScore?: (score: number, biography: string) => void;
 }
 
-export default function GameOverScreen({ gameState, onNewGame }: GameOverScreenProps) {
+export default function GameOverScreen({ gameState, onNewGame, onSubmitScore }: GameOverScreenProps) {
   const score = calculateScore(gameState);
+  const biographyRef = useRef(generateBiography(gameState));
+  const submittedRef = useRef(false);
+
+  // Automatically submit score on mount
+  useEffect(() => {
+    if (onSubmitScore && !submittedRef.current) {
+      submittedRef.current = true;
+      onSubmitScore(score, biographyRef.current);
+    }
+  }, [onSubmitScore, score]);
 
   const getScoreGrade = (s: number) => {
     if (s >= 800) return { grade: "S", label: "Leyenda", color: "text-yellow-400" };
@@ -80,6 +93,19 @@ export default function GameOverScreen({ gameState, onNewGame }: GameOverScreenP
           </div>
         </motion.div>
       </div>
+
+      {/* Biography */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="bg-surface-card border border-surface-card rounded-xl p-4"
+      >
+        <h3 className="text-sm font-semibold text-foreground mb-2">📜 Biografía</h3>
+        <p className="text-sm text-gray-300 leading-relaxed italic">
+          {biographyRef.current}
+        </p>
+      </motion.div>
 
       {/* Final stats */}
       <motion.div

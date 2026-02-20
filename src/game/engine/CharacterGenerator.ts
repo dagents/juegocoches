@@ -76,6 +76,7 @@ export function generateNewCharacter(name: string, country?: Country, difficulty
     family,
     talents,
     difficulty,
+    takuEncounters: 0,
     forococheroSurvived: false,
 
     career: null,

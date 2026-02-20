@@ -9,6 +9,7 @@ import { getRelationshipEvents, generateNPC } from "@/game/data/relationships";
 import { getPropertyDecisions, ALL_PROPERTIES } from "@/game/data/properties";
 import type { Decision } from "@/game/data/decisions";
 import type { GameEvent } from "@/game/data/events";
+import { getTakuEncounter } from "@/game/data/taku";
 
 export interface TurnResult {
   events: GameEvent[];
@@ -237,6 +238,31 @@ export function processTurn(state: GameState): { newState: GameState; turnResult
     }
   }
   events.push(...relationshipEvents);
+
+  // Taku encounter check — once per year on month 6
+  if (newState.currentMonth === 6) {
+    const takuEncounter = getTakuEncounter(
+      newState.currentAge,
+      newState.stats,
+      newState.difficulty,
+      newState.takuEncounters
+    );
+    if (takuEncounter) {
+      newState.stats = applyEffects(newState.stats, takuEncounter.effects);
+      if (takuEncounter.effects.money) {
+        newState.bankBalance += takuEncounter.effects.money * 100;
+      }
+      newState.takuEncounters++;
+      newState.lifeEvents.push({
+        age: newState.currentAge,
+        month: newState.currentMonth,
+        type: "event",
+        title: `⚫ Taku: ${takuEncounter.title}`,
+        description: takuEncounter.description,
+        effects: takuEncounter.effects,
+      });
+    }
+  }
 
   // Yearly: age up NPCs, update property values, marriage happiness bonus
   if (newAge) {
@@ -504,6 +530,7 @@ export function generateNewCharacter(name: string, country?: Country, difficulty
     properties: [],
     achievements: [],
     difficulty,
+    takuEncounters: 0,
     forococheroSurvived: false,
     isAlive: true,
     causeOfDeath: null,

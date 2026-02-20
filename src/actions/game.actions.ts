@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, ensureProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/types";
+import type { LeaderboardEntry } from "@/game/components/Leaderboard";
 
 import type { Prisma } from "@prisma/client";
 
@@ -135,34 +136,77 @@ export async function loadGameSave(): Promise<
   }
 }
 
-/** Get leaderboard — top scores */
+/** Get leaderboard — top 20 finished games with score */
 export async function getLeaderboard(): Promise<
-  ActionResult<
-    {
-      userId: string;
-      score: number;
-      currentAge: number;
-      countryCode: string;
-      isAlive: boolean;
-    }[]
-  >
+  ActionResult<LeaderboardEntry[]>
 > {
   try {
     const saves = await prisma.gameSave.findMany({
+      where: { score: { gt: 0 } },
       orderBy: { score: "desc" },
       take: 20,
-      select: {
-        userId: true,
-        score: true,
-        currentAge: true,
-        countryCode: true,
-        isAlive: true,
+      include: {
+        user: { select: { displayName: true } },
       },
     });
 
-    return { success: true, data: saves };
+    const entries: LeaderboardEntry[] = saves.map((save, i) => {
+      const gs = save.gameState as Record<string, unknown>;
+      const grade = getGradeFromScore(save.score);
+
+      return {
+        rank: i + 1,
+        characterName:
+          (gs.characterName as string) ??
+          save.user.displayName ??
+          "Desconocido",
+        score: save.score,
+        grade,
+        age: save.currentAge,
+        country: (gs.countryName as string) ?? save.countryCode,
+        career: (gs.career as Record<string, unknown>)?.name as string | null ?? null,
+        biography: save.biography ?? "",
+        createdAt: save.updatedAt.toISOString(),
+      };
+    });
+
+    return { success: true, data: entries };
   } catch (error) {
     console.error("getLeaderboard error:", error);
     return { success: false, error: "Error al cargar el ranking." };
   }
+}
+
+/** Submit final score and biography for the current user's game */
+export async function submitScore(
+  score: number,
+  biography: string
+): Promise<ActionResult> {
+  try {
+    const user = await requireAuth();
+
+    await prisma.gameSave.update({
+      where: { userId: user.id },
+      data: { score, biography },
+    });
+
+    revalidatePath("/game");
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { success: false, error: "Debes iniciar sesión." };
+    }
+    console.error("submitScore error:", error);
+    return { success: false, error: "Error al enviar puntuación." };
+  }
+}
+
+// Helper to map score to grade letter
+function getGradeFromScore(score: number): string {
+  if (score >= 800) return "S";
+  if (score >= 600) return "A";
+  if (score >= 400) return "B";
+  if (score >= 250) return "C";
+  if (score >= 100) return "D";
+  return "F";
 }

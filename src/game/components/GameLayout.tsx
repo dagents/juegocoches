@@ -13,6 +13,9 @@ import DecisionCard from "./DecisionCard";
 import Timeline from "./Timeline";
 import GameOverScreen from "./GameOverScreen";
 import NewGameScreen from "./NewGameScreen";
+import Tutorial from "./Tutorial";
+import Leaderboard, { type LeaderboardEntry } from "./Leaderboard";
+import { playSound } from "../engine/SoundManager";
 
 // Dynamically import Babylon.js scene (client-only, no SSR)
 const GameScene = dynamic(() => import("../scene/GameScene"), {
@@ -37,9 +40,11 @@ interface GameLayoutProps {
   initialState: GameState | null;
   onSave: (state: GameState) => Promise<void>;
   onNewGame: (state: GameState) => Promise<void>;
+  leaderboardEntries?: LeaderboardEntry[];
+  onSubmitScore?: (score: number, biography: string) => void;
 }
 
-export default function GameLayout({ initialState, onSave, onNewGame }: GameLayoutProps) {
+export default function GameLayout({ initialState, onSave, onNewGame, leaderboardEntries, onSubmitScore }: GameLayoutProps) {
   const [gameState, setGameState] = useState<GameState | null>(initialState);
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [pendingEvents, setPendingEvents] = useState<GameEvent[]>([]);
@@ -50,6 +55,7 @@ export default function GameLayout({ initialState, onSave, onNewGame }: GameLayo
   );
   const [isPending, startTransition] = useTransition();
   const [saving, setSaving] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(!initialState); // show tutorial for new players
 
   // Start new game
   const handleNewGame = useCallback(
@@ -59,6 +65,7 @@ export default function GameLayout({ initialState, onSave, onNewGame }: GameLayo
         await onNewGame(state);
         setGameState(state);
         setPhase("idle");
+        playSound("birth");
         setDecisions([]);
         setEventNarrative(null);
         setDecisionNarrative(null);
@@ -72,6 +79,7 @@ export default function GameLayout({ initialState, onSave, onNewGame }: GameLayo
   // Advance one month
   const handleNextMonth = useCallback(() => {
     if (!gameState || !gameState.isAlive) return;
+    playSound("click");
 
     startTransition(() => {
       const { newState, turnResult } = processTurn(gameState);
@@ -84,7 +92,17 @@ export default function GameLayout({ initialState, onSave, onNewGame }: GameLayo
         setEventNarrative(eventTexts);
         setPendingEvents(turnResult.events);
         setPhase("events");
+
+        // Play sound based on event valence
+        const hasPositive = turnResult.events.some(
+          (e) => (e.effects.happiness ?? 0) > 0 || (e.effects.money ?? 0) > 0
+        );
+        playSound(hasPositive ? "event_good" : "event_bad");
       }
+
+      // Sound for milestones/death
+      if (turnResult.deathCheck) playSound("death");
+      else if (turnResult.newPhase) playSound("milestone");
 
       // Queue decisions
       if (turnResult.decisions.length > 0) {
@@ -124,6 +142,7 @@ export default function GameLayout({ initialState, onSave, onNewGame }: GameLayo
 
       const newState = applyDecision(gameState, decision, choiceIndex);
       setGameState(newState);
+      playSound("decision");
 
       // Show narrative from the last life event added
       const lastEvent = newState.lifeEvents[newState.lifeEvents.length - 1];
@@ -159,14 +178,28 @@ export default function GameLayout({ initialState, onSave, onNewGame }: GameLayo
     setDecisionNarrative(null);
   }, []);
 
-  // No game yet — show new game screen
+  // No game yet — show tutorial then new game screen
   if (!gameState) {
-    return <NewGameScreen onStart={handleNewGame} loading={saving} />;
+    return (
+      <>
+        {showTutorial && <Tutorial onComplete={() => setShowTutorial(false)} />}
+        <NewGameScreen onStart={handleNewGame} loading={saving} />
+      </>
+    );
   }
 
   // Game over
   if (!gameState.isAlive) {
-    return <GameOverScreen gameState={gameState} onNewGame={handleRestart} />;
+    return (
+      <div className="space-y-8">
+        <GameOverScreen gameState={gameState} onNewGame={handleRestart} onSubmitScore={onSubmitScore} />
+        {leaderboardEntries && leaderboardEntries.length > 0 && (
+          <div className="max-w-3xl mx-auto">
+            <Leaderboard entries={leaderboardEntries} />
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -306,6 +339,13 @@ export default function GameLayout({ initialState, onSave, onNewGame }: GameLayo
       <div className="max-w-3xl mx-auto w-full">
         <Timeline events={gameState.lifeEvents} />
       </div>
+
+      {/* Leaderboard */}
+      {leaderboardEntries && leaderboardEntries.length > 0 && (
+        <div className="max-w-3xl mx-auto w-full">
+          <Leaderboard entries={leaderboardEntries} />
+        </div>
+      )}
     </div>
   );
 }
