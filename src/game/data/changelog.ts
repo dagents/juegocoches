@@ -10,6 +10,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.2",
+    date: "2026-02-20",
+    title: "Taku, Tutorial, Sonidos y Leaderboard",
+    highlight: "⚫ Taku ha llegado — el villano que arruinará tu vida",
+    changes: [
+      "⚫ Taku — el villano: 21 encuentros oscuros en todas las fases de vida. Te persigue desde la infancia hasta la vejez. Puedes resistirte... o no",
+      "🎓 Tutorial interactivo: 8 pasos que explican las mecánicas del juego para nuevos jugadores. Se puede saltar",
+      "🔊 Efectos de sonido: clicks, decisiones, eventos buenos/malos, sonido ominoso de Taku, nacimiento, muerte y milestones",
+      "🏆 Leaderboard global: ranking real conectado a la base de datos. Tu puntuación y biografía se guardan automáticamente al morir",
+      "📋 Changelog visible en /poll y /game para seguir las actualizaciones diarias",
+    ],
+  },
+  {
     version: "1.1",
     date: "2026-02-20",
     title: "Modo Forocochero, Propiedades y Relaciones",
