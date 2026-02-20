@@ -34,6 +34,17 @@ export interface RelationshipInfo {
   type: "partner" | "friend" | "enemy" | "family";
   strength: number; // 0-100
   since: number; // age when met
+  age: number; // NPC's current age
+}
+
+export interface OwnedProperty {
+  propertyId: string;
+  name: string;
+  type: "house" | "apartment" | "car" | "business" | "land";
+  purchasePrice: number;
+  currentValue: number;
+  purchaseAge: number;
+  monthlyIncome: number;
 }
 
 export interface LifeEvent {
@@ -67,9 +78,16 @@ export interface GameState {
   // Life
   career: CareerInfo | null;
   relationships: RelationshipInfo[];
+  partner: RelationshipInfo | null;
+  children: RelationshipInfo[];
+  isMarried: boolean;
   lifeEvents: LifeEvent[];
-  properties: string[]; // owned properties
+  properties: OwnedProperty[];
   achievements: string[];
+
+  // Difficulty
+  difficulty: 'normal' | 'forocochero';
+  forococheroSurvived: boolean;
 
   // Status
   isAlive: boolean;

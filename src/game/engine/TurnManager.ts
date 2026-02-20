@@ -5,6 +5,8 @@ import { getAgePhase, applyEffects, clampStat } from "./GameState";
 import { getRandomEvents } from "@/game/data/events";
 import { getDecisionsForTurn } from "@/game/data/decisions";
 import { getRandomCountry, type Country } from "@/game/data/countries";
+import { getRelationshipEvents, generateNPC } from "@/game/data/relationships";
+import { getPropertyDecisions, ALL_PROPERTIES } from "@/game/data/properties";
 import type { Decision } from "@/game/data/decisions";
 import type { GameEvent } from "@/game/data/events";
 
@@ -27,13 +29,15 @@ export interface TurnResult {
 function getMonthlyDrift(state: GameState): Partial<CharacterStats> {
   const age = state.currentAge;
   const phase = getAgePhase(age);
+  const isForocochero = state.difficulty === 'forocochero';
 
   const drift: Partial<CharacterStats> = {};
 
-  // Health naturally declines with age
-  if (age > 40) drift.health = -0.3;
-  if (age > 60) drift.health = -0.8;
-  if (age > 75) drift.health = -1.5;
+  // Health naturally declines with age (1.5x in forocochero)
+  const healthMult = isForocochero ? 1.5 : 1;
+  if (age > 40) drift.health = -0.3 * healthMult;
+  if (age > 60) drift.health = -0.8 * healthMult;
+  if (age > 75) drift.health = -1.5 * healthMult;
 
   // Education grows in youth
   if (phase === "childhood") drift.education = 0.5;
@@ -53,6 +57,16 @@ function getMonthlyDrift(state: GameState): Partial<CharacterStats> {
     drift.money = 0.1 * state.career.level;
   }
 
+  // Marriage happiness bonus (monthly)
+  if (state.isMarried && state.partner) {
+    drift.happiness = (drift.happiness ?? 0) + 0.3;
+  }
+
+  // Forocochero: extra happiness drain
+  if (isForocochero) {
+    drift.happiness = (drift.happiness ?? 0) - 0.2;
+  }
+
   return drift;
 }
 
@@ -60,6 +74,7 @@ function getMonthlyDrift(state: GameState): Partial<CharacterStats> {
 function checkDeath(state: GameState): { dies: boolean; cause: string | null } {
   const { health } = state.stats;
   const age = state.currentAge;
+  const deathMult = state.difficulty === 'forocochero' ? 1.5 : 1;
 
   // Health-based death
   if (health <= 0) {
@@ -68,7 +83,7 @@ function checkDeath(state: GameState): { dies: boolean; cause: string | null } {
 
   // Age-based death probability (increases exponentially after 60)
   if (age > 60) {
-    const deathChance = Math.pow((age - 60) / 40, 2) * 0.02;
+    const deathChance = Math.pow((age - 60) / 40, 2) * 0.02 * deathMult;
     if (Math.random() < deathChance) {
       const causes = [
         "Causas naturales",
@@ -82,7 +97,7 @@ function checkDeath(state: GameState): { dies: boolean; cause: string | null } {
 
   // Very low health increases death chance at any age
   if (health < 15) {
-    const deathChance = (15 - health) * 0.005;
+    const deathChance = (15 - health) * 0.005 * deathMult;
     if (Math.random() < deathChance) {
       return { dies: true, cause: "Complicaciones de salud graves" };
     }
@@ -163,8 +178,110 @@ export function processTurn(state: GameState): { newState: GameState; turnResult
     });
   }
 
-  // Get available decisions
+  // Process relationship events
+  const relationshipEvents = getRelationshipEvents(newState);
+  for (const relEvent of relationshipEvents) {
+    newState.stats = applyEffects(newState.stats, relEvent.effects);
+    if (relEvent.effects.money) {
+      newState.bankBalance += relEvent.effects.money * 100;
+    }
+    newState.lifeEvents.push({
+      age: newState.currentAge,
+      month: newState.currentMonth,
+      type: "relationship",
+      title: relEvent.name,
+      description: relEvent.description,
+      effects: relEvent.effects,
+    });
+
+    // Handle partner creation/removal from events
+    if (relEvent.id === "rel_teen_crush" || relEvent.id === "rel_ya_new_partner" || relEvent.id === "rel_elderly_new_companion") {
+      if (!newState.partner) {
+        const npc = generateNPC(newState.currentAge, "partner");
+        newState.partner = npc;
+        newState.relationships.push(npc);
+      }
+    }
+    if (relEvent.id === "rel_teen_breakup") {
+      if (newState.partner) {
+        newState.relationships = newState.relationships.filter((r) => r.id !== newState.partner!.id);
+        newState.partner = null;
+      }
+    }
+    if (relEvent.id === "rel_ya_proposal") {
+      newState.isMarried = true;
+    }
+    if (relEvent.id === "rel_adult_baby") {
+      const child = generateNPC(0, "family");
+      child.age = 0;
+      newState.children.push(child);
+      newState.relationships.push(child);
+    }
+    if (relEvent.id === "rel_adult_divorce") {
+      newState.isMarried = false;
+      if (newState.partner) {
+        newState.relationships = newState.relationships.filter((r) => r.id !== newState.partner!.id);
+        newState.partner = null;
+      }
+    }
+    if (relEvent.id === "rel_elderly_partner_death") {
+      if (newState.partner) {
+        newState.relationships = newState.relationships.filter((r) => r.id !== newState.partner!.id);
+        newState.partner = null;
+        newState.isMarried = false;
+      }
+    }
+    if (relEvent.id === "rel_new_friend") {
+      const friend = generateNPC(newState.currentAge, "friend");
+      newState.relationships.push(friend);
+    }
+  }
+  events.push(...relationshipEvents);
+
+  // Yearly: age up NPCs, update property values, marriage happiness bonus
+  if (newAge) {
+    // Age up all relationship NPCs
+    for (const rel of newState.relationships) {
+      rel.age++;
+    }
+    if (newState.partner) newState.partner.age++;
+    for (const child of newState.children) {
+      child.age++;
+    }
+
+    // Update property values yearly
+    for (const prop of newState.properties) {
+      const template = ALL_PROPERTIES.find((p) => p.id === prop.propertyId);
+      if (template) {
+        prop.currentValue = Math.round(prop.currentValue * template.appreciationRate);
+      }
+    }
+
+    // Marriage happiness bonus
+    if (newState.isMarried && newState.partner) {
+      newState.stats.happiness = clampStat(newState.stats.happiness + 2);
+    }
+  }
+
+  // Property income/maintenance in monthly economy
+  for (const prop of newState.properties) {
+    const template = ALL_PROPERTIES.find((p) => p.id === prop.propertyId);
+    if (template) {
+      newState.bankBalance += prop.monthlyIncome - template.monthlyMaintenance;
+    }
+  }
+
+  // Get available decisions (including property decisions)
   const decisions = getDecisionsForTurn(currentPhase, newState.stats);
+  const propertyDecisions = getPropertyDecisions(
+    newState.properties.map((p) => p.propertyId),
+    newState.bankBalance,
+    newState.currentAge,
+    newState.stats
+  );
+  if (Math.random() < 0.15 && propertyDecisions.length > 0) {
+    decisions.push(propertyDecisions[0]);
+  }
 
   // Phase milestone
   if (newPhase) {
@@ -189,6 +306,20 @@ export function processTurn(state: GameState): { newState: GameState; turnResult
   // Birthday milestone
   if (newAge && newState.currentAge % 10 === 0) {
     newState.achievements.push(`Cumplir ${newState.currentAge} años`);
+  }
+
+  // Forocochero survival check
+  if (newState.currentAge >= 70 && newState.difficulty === 'forocochero' && newState.isAlive && !newState.forococheroSurvived) {
+    newState.forococheroSurvived = true;
+    newState.achievements.push("Superviviente Forocochero 💀 — Llegar a los 70 en modo extremo");
+    newState.lifeEvents.push({
+      age: newState.currentAge,
+      month: newState.currentMonth,
+      type: "milestone",
+      title: "¡Superviviente Forocochero! 💀",
+      description: "Contra todo pronóstico, has sobrevivido hasta los 70 en el modo más duro. Leyenda.",
+      effects: {},
+    });
   }
 
   // Death check
@@ -255,6 +386,36 @@ export function applyDecision(
     }
   }
 
+  // Handle property buy/sell decisions
+  if (decision.id.startsWith("buy_") && choiceIndex === 0) {
+    const propId = decision.id.replace("buy_", "");
+    const template = ALL_PROPERTIES.find((p) => p.id === propId);
+    if (template) {
+      newState.bankBalance -= template.basePrice;
+      if (newState.bankBalance < 0) {
+        newState.debt += Math.abs(newState.bankBalance);
+        newState.bankBalance = 0;
+      }
+      newState.properties.push({
+        propertyId: template.id,
+        name: template.name,
+        type: template.type,
+        purchasePrice: template.basePrice,
+        currentValue: template.basePrice,
+        purchaseAge: newState.currentAge,
+        monthlyIncome: template.monthlyIncome,
+      });
+    }
+  }
+  if (decision.id.startsWith("sell_") && choiceIndex === 0) {
+    const propId = decision.id.replace("sell_", "");
+    const owned = newState.properties.find((p) => p.propertyId === propId);
+    if (owned) {
+      newState.bankBalance += owned.currentValue;
+      newState.properties = newState.properties.filter((p) => p.propertyId !== propId);
+    }
+  }
+
   newState.lifeEvents.push({
     age: newState.currentAge,
     month: newState.currentMonth,
@@ -268,7 +429,7 @@ export function applyDecision(
 }
 
 /** Generate initial game state for a new character */
-export function generateNewCharacter(name: string, country?: Country): GameState {
+export function generateNewCharacter(name: string, country?: Country, difficulty: 'normal' | 'forocochero' = 'normal'): GameState {
   const selectedCountry = country ?? getRandomCountry();
 
   const wealthTier = (Math.floor(Math.random() * 5) + 1) as 1 | 2 | 3 | 4 | 5;
@@ -325,6 +486,9 @@ export function generateNewCharacter(name: string, country?: Country): GameState
     talents,
     career: null,
     relationships: [],
+    partner: null,
+    children: [],
+    isMarried: false,
     lifeEvents: [{
       age: 0, month: 1, type: "milestone",
       title: "Nacimiento",
@@ -339,6 +503,8 @@ export function generateNewCharacter(name: string, country?: Country): GameState
     }],
     properties: [],
     achievements: [],
+    difficulty,
+    forococheroSurvived: false,
     isAlive: true,
     causeOfDeath: null,
     bankBalance: Math.round(startingMoney),

@@ -12,6 +12,7 @@ interface NewGameScreenProps {
 
 export default function NewGameScreen({ onStart, loading = false }: NewGameScreenProps) {
   const [playerName, setPlayerName] = useState("");
+  const [difficulty, setDifficulty] = useState<'normal' | 'forocochero'>('normal');
   const [preview, setPreview] = useState<GameState | null>(null);
   const [rolling, setRolling] = useState(false);
 
@@ -23,7 +24,7 @@ export default function NewGameScreen({ onStart, loading = false }: NewGameScree
     // Dramatic rolling effect
     let count = 0;
     const interval = setInterval(() => {
-      setPreview(generateNewCharacter(playerName));
+      setPreview(generateNewCharacter(playerName, undefined, difficulty));
       count++;
       if (count >= 8) {
         clearInterval(interval);
@@ -77,6 +78,41 @@ export default function NewGameScreen({ onStart, loading = false }: NewGameScree
         />
       </motion.div>
 
+      {/* Difficulty selector */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="grid grid-cols-2 gap-3 max-w-md mx-auto"
+      >
+        <button
+          onClick={() => { setDifficulty('normal'); setPreview(null); }}
+          className={`p-4 rounded-xl border-2 text-left transition-all ${
+            difficulty === 'normal'
+              ? 'border-neon-cyan bg-neon-cyan/10'
+              : 'border-gray-700 bg-surface-elevated hover:border-gray-500'
+          }`}
+        >
+          <div className="text-lg font-bold text-foreground">🎮 Normal</div>
+          <p className="text-xs text-gray-400 mt-1">
+            Una vida con posibilidades equilibradas. Para disfrutar la historia.
+          </p>
+        </button>
+        <button
+          onClick={() => { setDifficulty('forocochero'); setPreview(null); }}
+          className={`p-4 rounded-xl border-2 text-left transition-all ${
+            difficulty === 'forocochero'
+              ? 'border-red-500 bg-red-500/10'
+              : 'border-gray-700 bg-surface-elevated hover:border-red-500/50'
+          }`}
+        >
+          <div className="text-lg font-bold text-red-400">💀 Forocochero</div>
+          <p className="text-xs text-gray-400 mt-1">
+            Stats -15, familia jodida, más enfermedades. ¿Llegarás a los 70?
+          </p>
+        </button>
+      </motion.div>
+
       {/* Roll button */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
@@ -118,6 +154,11 @@ export default function NewGameScreen({ onStart, loading = false }: NewGameScree
             <p className="text-neon-cyan font-medium">
               📍 {preview.countryName}
             </p>
+            {preview.difficulty === 'forocochero' && (
+              <span className="inline-block mt-1 px-3 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">
+                💀 MODO FOROCOCHERO
+              </span>
+            )}
           </div>
 
           {/* Family info */}

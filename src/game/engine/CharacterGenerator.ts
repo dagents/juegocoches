@@ -5,14 +5,17 @@ import { clampStat } from "./GameState";
 import { getRandomCountry, type Country } from "../data/countries";
 
 /** Generate a completely random new character */
-export function generateNewCharacter(name: string, country?: Country): GameState {
+export function generateNewCharacter(name: string, country?: Country, difficulty: 'normal' | 'forocochero' = 'normal'): GameState {
   const selectedCountry = country ?? getRandomCountry();
+  const isForocochero = difficulty === 'forocochero';
 
-  // Random family
-  const wealthTier = (Math.floor(Math.random() * 5) + 1) as 1 | 2 | 3 | 4 | 5;
-  const familyStatuses: FamilyInfo["familyStatus"][] = [
-    "united", "united", "united", "divorced", "single_parent", "orphanage",
-  ];
+  // Random family — forocochero: only wealth 1-2, weighted toward orphanage/single_parent
+  const wealthTier = isForocochero
+    ? (Math.floor(Math.random() * 2) + 1) as 1 | 2
+    : (Math.floor(Math.random() * 5) + 1) as 1 | 2 | 3 | 4 | 5;
+  const familyStatuses: FamilyInfo["familyStatus"][] = isForocochero
+    ? ["orphanage", "orphanage", "single_parent", "single_parent", "divorced", "united"]
+    : ["united", "united", "united", "divorced", "single_parent", "orphanage"];
   const familyStatus = familyStatuses[Math.floor(Math.random() * familyStatuses.length)];
 
   const family: FamilyInfo = {
@@ -43,16 +46,21 @@ export function generateNewCharacter(name: string, country?: Country): GameState
   const { min, max } = selectedCountry.startingWealth;
   const startingMoney = min + Math.random() * (max - min);
 
+  // Forocochero penalty: -15 to all starting stats
+  const hardcorePenalty = isForocochero ? -15 : 0;
+
   const stats: CharacterStats = {
-    money: clampStat(20 + wealthBonus),
-    education: clampStat(5 + countryBonus * 0.3),
-    health: clampStat(70 + Math.random() * 30),
-    happiness: clampStat(50 + wealthBonus + Math.random() * 20),
-    relationships: clampStat(30 + (familyStatus === "united" ? 20 : 0)),
-    reputation: clampStat(10 + wealthBonus),
-    intelligence: clampStat(30 + Math.random() * 40),
-    charisma: clampStat(20 + Math.random() * 40),
+    money: clampStat(20 + wealthBonus + hardcorePenalty),
+    education: clampStat(5 + countryBonus * 0.3 + hardcorePenalty),
+    health: clampStat(70 + Math.random() * 30 + hardcorePenalty),
+    happiness: clampStat(50 + wealthBonus + Math.random() * 20 + hardcorePenalty),
+    relationships: clampStat(30 + (familyStatus === "united" ? 20 : 0) + hardcorePenalty),
+    reputation: clampStat(10 + wealthBonus + hardcorePenalty),
+    intelligence: clampStat(30 + Math.random() * 40 + hardcorePenalty),
+    charisma: clampStat(20 + Math.random() * 40 + hardcorePenalty),
   };
+
+  const finalStartingMoney = isForocochero ? Math.round(startingMoney / 2) : Math.round(startingMoney);
 
   const state: GameState = {
     characterName,
@@ -67,9 +75,14 @@ export function generateNewCharacter(name: string, country?: Country): GameState
     stats,
     family,
     talents,
+    difficulty,
+    forococheroSurvived: false,
 
     career: null,
     relationships: [],
+    partner: null,
+    children: [],
+    isMarried: false,
     lifeEvents: [
       {
         age: 0,
@@ -90,7 +103,7 @@ export function generateNewCharacter(name: string, country?: Country): GameState
     isAlive: true,
     causeOfDeath: null,
 
-    bankBalance: Math.round(startingMoney),
+    bankBalance: finalStartingMoney,
     monthlyIncome: 0,
     monthlyExpenses: 0,
     debt: 0,
