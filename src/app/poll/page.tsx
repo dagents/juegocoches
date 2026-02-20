@@ -7,6 +7,7 @@ import ProposeButton from "@/components/ideas/ProposeButton";
 import GameProposalListRealtime from "@/components/game-proposals/GameProposalListRealtime";
 import ProposeGameButton from "@/components/game-proposals/ProposeGameButton";
 import Changelog from "@/components/ranking/Changelog";
+import GameChangelog from "@/game/components/GameChangelog";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import type {
@@ -171,12 +172,19 @@ export default async function HomePage() {
         </Card>
       </section>
 
-      {/* Changelog */}
+      {/* Game Changelog */}
+      <section>
+        <Card>
+          <GameChangelog />
+        </Card>
+      </section>
+
+      {/* Improvement Winners History */}
       {winners.length > 0 && (
         <section>
           <Card>
             <h2 className="text-lg font-semibold text-foreground mb-4">
-              Historial de Ganadores
+              Historial de Mejoras Ganadoras
             </h2>
             <Changelog winners={winners} />
           </Card>

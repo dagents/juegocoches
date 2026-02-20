@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { startNewGame, saveGameState } from "@/actions/game.actions";
 import GameLayout from "@/game/components/GameLayout";
+import GameChangelog from "@/game/components/GameChangelog";
 import type { GameState } from "@/game/engine/GameState";
 import type { Prisma } from "@prisma/client";
 
@@ -30,12 +31,15 @@ export default async function GamePage() {
   }
 
   return (
-    <div className="min-h-[80vh] py-4">
+    <div className="min-h-[80vh] py-4 space-y-6">
       <GameLayout
         initialState={initialState}
         onSave={handleSave}
         onNewGame={handleNewGame}
       />
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <GameChangelog />
+      </div>
     </div>
   );
 }
