@@ -101,6 +101,16 @@ export function generateNewCharacter(name: string, country?: Country, difficulty
     properties: [],
     achievements: [],
 
+    currentEducation: null,
+    completedEducation: [],
+    countriesLived: [selectedCountry.name],
+    emigrationCount: 0,
+
+    addictions: [],
+    gameSpeed: 1,
+    ownedBusinesses: [],
+    statsHistory: [],
+
     isAlive: true,
     causeOfDeath: null,
 

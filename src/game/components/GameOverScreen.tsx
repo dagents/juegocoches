@@ -5,14 +5,16 @@ import { motion } from "framer-motion";
 import type { GameState } from "../engine/GameState";
 import { calculateScore } from "../engine/GameState";
 import { generateBiography } from "../engine/BiographyGenerator";
+import { canInherit, getInheritableChildren } from "../engine/InheritanceSystem";
 
 interface GameOverScreenProps {
   gameState: GameState;
   onNewGame: () => void;
   onSubmitScore?: (score: number, biography: string) => void;
+  onInherit?: (childIndex: number) => void;
 }
 
-export default function GameOverScreen({ gameState, onNewGame, onSubmitScore }: GameOverScreenProps) {
+export default function GameOverScreen({ gameState, onNewGame, onSubmitScore, onInherit }: GameOverScreenProps) {
   const score = calculateScore(gameState);
   const biographyRef = useRef(generateBiography(gameState));
   const submittedRef = useRef(false);
@@ -157,6 +159,34 @@ export default function GameOverScreen({ gameState, onNewGame, onSubmitScore }: 
                 <span className="text-gray-500">{event.age}a</span>
                 <span className="text-foreground">{event.title}</span>
               </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Inheritance */}
+      {onInherit && canInherit(gameState) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.3 }}
+          className="bg-surface-card border border-neon-cyan/30 rounded-xl p-4 space-y-3"
+        >
+          <h3 className="text-sm font-semibold text-foreground">
+            👨‍👧 Continuar el legado
+          </h3>
+          <p className="text-xs text-gray-400">
+            Tus hijos pueden heredar tu fortuna y continuar la historia familiar.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {getInheritableChildren(gameState).map((child, i) => (
+              <button
+                key={child.id}
+                onClick={() => onInherit(i)}
+                className="px-4 py-3 sm:py-2 bg-neon-cyan/20 hover:bg-neon-cyan/30 active:bg-neon-cyan/40 text-neon-cyan border border-neon-cyan/30 rounded-lg transition-colors font-medium text-sm min-h-[44px]"
+              >
+                Continuar como {child.name} ({child.age} años)
+              </button>
             ))}
           </div>
         </motion.div>

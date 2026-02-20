@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import type { GameState, LifeEvent } from "../engine/GameState";
 import { applyEffects, calculateScore } from "../engine/GameState";
-import { processTurn, applyDecision, type TurnResult } from "../engine/TurnManager";
+import { processTurn, applyDecision, processMultipleMonths, type TurnResult } from "../engine/TurnManager";
 import type { Decision } from "@/game/data/decisions";
 import type { GameEvent } from "@/game/data/events";
 import StatsPanel from "./StatsPanel";
@@ -16,6 +16,7 @@ import NewGameScreen from "./NewGameScreen";
 import Tutorial from "./Tutorial";
 import Leaderboard, { type LeaderboardEntry } from "./Leaderboard";
 import { playSound } from "../engine/SoundManager";
+import { createInheritedCharacter } from "../engine/InheritanceSystem";
 
 // Dynamically import Babylon.js scene (client-only, no SSR)
 const GameScene = dynamic(() => import("../scene/GameScene"), {
@@ -82,7 +83,10 @@ export default function GameLayout({ initialState, onSave, onNewGame, leaderboar
     playSound("click");
 
     startTransition(() => {
-      const { newState, turnResult } = processTurn(gameState);
+      const speed = gameState.gameSpeed ?? 1;
+      const { newState, turnResult } = speed > 1
+        ? processMultipleMonths(gameState, speed)
+        : processTurn(gameState);
 
       // Show events if any
       if (turnResult.events.length > 0) {
@@ -178,6 +182,22 @@ export default function GameLayout({ initialState, onSave, onNewGame, leaderboar
     setDecisionNarrative(null);
   }, []);
 
+  // Handle inheritance — continue as a child
+  const handleInherit = useCallback(
+    (childIndex: number) => {
+      if (!gameState) return;
+      const newState = createInheritedCharacter(gameState, childIndex);
+      setGameState(newState);
+      setDecisions([]);
+      setPhase("idle");
+      setEventNarrative(null);
+      setDecisionNarrative(null);
+      playSound("birth");
+      onSave(newState);
+    },
+    [gameState, onSave]
+  );
+
   // No game yet — show tutorial then new game screen
   if (!gameState) {
     return (
@@ -192,7 +212,7 @@ export default function GameLayout({ initialState, onSave, onNewGame, leaderboar
   if (!gameState.isAlive) {
     return (
       <div className="space-y-8">
-        <GameOverScreen gameState={gameState} onNewGame={handleRestart} onSubmitScore={onSubmitScore} />
+        <GameOverScreen gameState={gameState} onNewGame={handleRestart} onInherit={handleInherit} onSubmitScore={onSubmitScore} />
         {leaderboardEntries && leaderboardEntries.length > 0 && (
           <div className="max-w-3xl mx-auto">
             <Leaderboard entries={leaderboardEntries} />
@@ -320,13 +340,35 @@ export default function GameLayout({ initialState, onSave, onNewGame, leaderboar
               exit={{ opacity: 0 }}
               className="text-center"
             >
-              <button
-                onClick={handleNextMonth}
-                disabled={isPending}
-                className="w-full sm:w-auto px-8 py-4 sm:py-3.5 bg-neon-purple hover:bg-purple-600 active:bg-purple-700 disabled:bg-gray-700 text-white rounded-xl font-semibold text-lg transition-all neon-glow-purple min-h-[48px]"
-              >
-                {isPending ? "Procesando..." : "Siguiente mes →"}
-              </button>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={handleNextMonth}
+                  disabled={isPending}
+                  className="px-8 py-4 sm:py-3.5 bg-neon-purple hover:bg-purple-600 active:bg-purple-700 disabled:bg-gray-700 text-white rounded-xl font-semibold text-lg transition-all neon-glow-purple min-h-[48px]"
+                >
+                  {isPending ? "Procesando..." : "Siguiente mes →"}
+                </button>
+                {/* Speed toggle pills */}
+                <div className="flex gap-1">
+                  {([1, 3, 6] as const).map((speed) => (
+                    <button
+                      key={speed}
+                      onClick={() => {
+                        if (!gameState) return;
+                        setGameState({ ...gameState, gameSpeed: speed });
+                        playSound("click");
+                      }}
+                      className={`px-2.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                        (gameState.gameSpeed ?? 1) === speed
+                          ? "bg-neon-purple text-white"
+                          : "bg-surface-elevated text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      {speed}x
+                    </button>
+                  ))}
+                </div>
+              </div>
               <p className="text-xs text-gray-500 mt-2">
                 {gameState.currentAge} años · Mes {gameState.currentMonth}
               </p>

@@ -1,5 +1,7 @@
 // Game state management for "El Destino en tus Manos"
 
+import type { AddictionEntry } from "@/game/data/addictions";
+
 export type AgePhase = "childhood" | "teen" | "young_adult" | "adult" | "elderly";
 
 export interface CharacterStats {
@@ -47,6 +49,21 @@ export interface OwnedProperty {
   monthlyIncome: number;
 }
 
+export interface OwnedBusiness {
+  businessId: string;
+  name: string;
+  employees: number;
+  monthlyRevenue: number;
+  monthsActive: number;
+  health: number; // 0-100, business viability
+}
+
+export interface StatsSnapshot {
+  age: number;
+  month: number;
+  stats: CharacterStats;
+}
+
 export interface LifeEvent {
   age: number;
   month: number;
@@ -85,6 +102,14 @@ export interface GameState {
   properties: OwnedProperty[];
   achievements: string[];
 
+  // Education system
+  currentEducation: { pathId: string; monthsLeft: number } | null;
+  completedEducation: string[];
+
+  // Emigration
+  countriesLived: string[];
+  emigrationCount: number;
+
   // Difficulty
   difficulty: 'normal' | 'forocochero';
   forococheroSurvived: boolean;
@@ -96,12 +121,24 @@ export interface GameState {
   isAlive: boolean;
   causeOfDeath: string | null;
 
+  // Addictions
+  addictions: AddictionEntry[];
+
+  // Game speed (months per click)
+  gameSpeed: 1 | 3 | 6;
+
   // Economy
   bankBalance: number; // actual money in currency units
   monthlyIncome: number;
   monthlyExpenses: number;
   debt: number;
   investments: number;
+
+  // Entrepreneurship
+  ownedBusinesses: OwnedBusiness[];
+
+  // Stats history for life chart (snapshot every January)
+  statsHistory: StatsSnapshot[];
 }
 
 export function getAgePhase(age: number): AgePhase {
