@@ -28,10 +28,10 @@ export default async function Header() {
                 🎮 Jugar
               </Link>
               <Link
-                href="/poll/juego"
+                href="/poll"
                 className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
               >
-                🏆 Votación
+                💡 Ideas
               </Link>
             </>
           )}

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Toaster } from "sonner";
+import { Suspense } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ToasterProvider from "@/components/layout/ToasterProvider";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import "./globals.css";
+
+export const dynamic = "force-dynamic";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -36,20 +39,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Header />
+        <Suspense>
+          <Header />
+        </Suspense>
         <main className="flex-1">{children}</main>
         <Footer />
-        <Toaster
-          theme="dark"
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: "#111118",
-              border: "1px solid #2a2a3d",
-              color: "#e2e2f0",
-            },
-          }}
-        />
+        <ToasterProvider />
       </body>
     </html>
   );

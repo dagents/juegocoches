@@ -3,8 +3,8 @@
 import { useState, useCallback, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
-import type { GameState, LifeEvent } from "../engine/GameState";
-import { applyEffects, calculateScore } from "../engine/GameState";
+import type { GameState, LifeEvent, AgePhase } from "../engine/GameState";
+import { applyEffects, calculateScore, getAgePhase } from "../engine/GameState";
 import { processTurn, applyDecision, processMultipleMonths, type TurnResult } from "../engine/TurnManager";
 import type { Decision } from "@/game/data/decisions";
 import type { GameEvent } from "@/game/data/events";
@@ -15,6 +15,7 @@ import GameOverScreen from "./GameOverScreen";
 import NewGameScreen from "./NewGameScreen";
 import Tutorial from "./Tutorial";
 import Leaderboard, { type LeaderboardEntry } from "./Leaderboard";
+import PhaseTransition from "./PhaseTransition";
 import { playSound } from "../engine/SoundManager";
 import { createInheritedCharacter } from "../engine/InheritanceSystem";
 
@@ -57,6 +58,7 @@ export default function GameLayout({ initialState, onSave, onNewGame, leaderboar
   const [isPending, startTransition] = useTransition();
   const [saving, setSaving] = useState(false);
   const [showTutorial, setShowTutorial] = useState(!initialState); // show tutorial for new players
+  const [transitionPhase, setTransitionPhase] = useState<AgePhase | null>(null);
 
   // Start new game
   const handleNewGame = useCallback(
@@ -104,9 +106,12 @@ export default function GameLayout({ initialState, onSave, onNewGame, leaderboar
         playSound(hasPositive ? "event_good" : "event_bad");
       }
 
-      // Sound for milestones/death
+      // Sound for milestones/death + phase transition overlay
       if (turnResult.deathCheck) playSound("death");
-      else if (turnResult.newPhase) playSound("milestone");
+      else if (turnResult.newPhase) {
+        playSound("milestone");
+        setTransitionPhase(getAgePhase(newState.currentAge));
+      }
 
       // Queue decisions
       if (turnResult.decisions.length > 0) {
@@ -224,6 +229,15 @@ export default function GameLayout({ initialState, onSave, onNewGame, leaderboar
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Phase transition overlay */}
+      <AnimatePresence>
+        {transitionPhase && (
+          <PhaseTransition
+            phase={transitionPhase}
+            onComplete={() => setTransitionPhase(null)}
+          />
+        )}
+      </AnimatePresence>
       {/* Top: 3D scene + stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* 3D Scene */}
